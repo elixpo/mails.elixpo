@@ -112,9 +112,9 @@ const Navbar = () => {
                             letterSpacing: "-0.01em",
                         }}
                     >
-                        mail
+                        Elixpo
                         <Box component="span" sx={{ color: ACCENT }}>
-                            .elixpo
+                             Mails
                         </Box>
                     </Typography>
                     <Chip
