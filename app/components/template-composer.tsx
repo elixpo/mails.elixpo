@@ -187,14 +187,14 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             )}
 
             <Stack spacing={2.5}>
-                {/* Body editor — top */}
+
                 <GlassCard sx={{ p: 0, overflow: "hidden" }}>
                     <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                        <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#f5f5f4" }}>Body</Typography>
+                        <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#f5f5f4" }}>Compose the email body here - supports Rich Text</Typography>
                     </Box>
                     {/* Extra left padding so BlockNote's block handles (+ / drag)
                         — which sit in a left gutter outside the text — stay in view. */}
-                    <Box sx={{ minHeight: 380, py: { xs: 2, md: 3 }, pr: { xs: 2, md: 3 }, pl: { xs: 5, md: 7 } }}>
+                    <Box sx={{ minHeight: 450, py: { xs: 2, md: 3 }, pr: { xs: 2, md: 3 }, pl: { xs: 5, md: 7, lg: 9 } }}>
                         <LixEditor
                             initialContent={initialContent}
                             features={EMAIL_FEATURES}

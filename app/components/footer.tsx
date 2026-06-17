@@ -77,9 +77,10 @@ const Footer = () => {
                                 sx={{ height: 28, width: 28, borderRadius: "7px", display: "block" }}
                             />
                             <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: "#f4f4f6" }}>
-                                mail
+                                Elixpo
                                 <Box component="span" sx={{ color: ACCENT }}>
-                                    .elixpo
+                                    {" "}
+                                    Mails
                                 </Box>
                             </Typography>
                         </Stack>

@@ -90,7 +90,7 @@ function LoginInner() {
                 <Box component="img" src="/mark.png" alt="mail.elixpo" sx={{ height: 60, width: 60, mx: "auto", mb: 2, borderRadius: "16px", display: "block", filter: "drop-shadow(0 10px 24px rgba(124,92,255,0.35))" }} />
 
                 <Typography sx={{ fontWeight: 800, fontSize: "1.6rem", letterSpacing: "-0.01em" }}>
-                    Sign in to mail.elixpo
+                    Sign in to Elixpo Mails
                 </Typography>
                 <Typography sx={{ color: "rgba(245,245,244,0.6)", fontSize: "0.92rem", mt: 0.8 }}>
                     Manage your senders, templates, and transactional sends.
@@ -141,7 +141,7 @@ function LoginInner() {
                         </Typography>
                     </Stack>
                     <Typography sx={{ color: "rgba(245,245,244,0.62)", fontSize: "0.84rem", lineHeight: 1.6, mb: 1.5 }}>
-                        mail.elixpo doesn't have its own password. It uses{" "}
+                        Elixpo Mails doesn't have its own password. It uses{" "}
                         <strong style={{ color: "#f5f5f4" }}>Elixpo Accounts</strong> — the single,
                         secure sign-on shared across the whole Elixpo ecosystem. One identity, everywhere.
                     </Typography>

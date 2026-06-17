@@ -64,9 +64,10 @@ function Brand() {
                 sx={{ height: 28, width: 28, borderRadius: "8px", display: "block" }}
             />
             <Typography sx={{ fontWeight: 700, fontSize: "1.02rem", color: "#f5f5f4", letterSpacing: "-0.01em", display: { xs: "none", sm: "block" } }}>
-                mail
+                Elixpo
                 <Box component="span" sx={{ color: ACCENT }}>
-                    .elixpo
+                    {" "}
+                    Mails
                 </Box>
             </Typography>
         </Box>

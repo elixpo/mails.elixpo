@@ -115,7 +115,8 @@ const Navbar = () => {
                     >
                         Elixpo
                         <Box component="span" sx={{ color: ACCENT }}>
-                             Mails
+                            {" "}
+                            Mails
                         </Box>
                     </Typography>
                     <Chip
