@@ -35,6 +35,15 @@ import DashboardNav, { type NavItem } from "./dashboard-nav";
 
 const BORDER = "rgba(255,255,255,0.07)";
 
+const MENU_ITEM_SX = {
+    fontSize: "0.86rem",
+    py: 1.0,
+    gap: 1.3,
+    color: "#f5f5f4",
+    "&:hover": { background: "rgba(255,255,255,0.04)" },
+} as const;
+const MENU_ICON_SX = { fontSize: 18, color: "rgba(245,245,244,0.55)" } as const;
+
 const PRIMARY_NAV: NavItem[] = [
     { label: "Overview", href: "/dashboard", icon: DashboardIcon },
     { label: "Products", href: "/dashboard/products", icon: InventoryIcon },
@@ -160,49 +169,87 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                         },
                     }}
                 >
-                    <Box sx={{ px: 2, py: 1.4 }}>
-                        <Typography sx={{ fontSize: "0.88rem", fontWeight: 700, color: "#f5f5f4" }}>
-                            {user.name || user.email}
-                        </Typography>
-                        <Typography sx={{ fontSize: "0.78rem", color: "rgba(245,245,244,0.5)" }}>
-                            {user.email}
-                        </Typography>
-                        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 0.9 }}>
-                            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(245,245,244,0.35)" }}>
-                                Tenant
+                    {/* Identity header */}
+                    <Box sx={{ px: 2, pt: 1.6, pb: 1.3 }}>
+                        <Stack direction="row" spacing={1.2} alignItems="center">
+                            <Avatar
+                                src={user.avatar || undefined}
+                                sx={{ width: 38, height: 38, fontSize: "1rem", bgcolor: "rgba(155,123,247,0.4)" }}
+                            >
+                                {initials(user)}
+                            </Avatar>
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ fontSize: "0.9rem", fontWeight: 700, color: "#f5f5f4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {user.name || user.email}
+                                </Typography>
+                                <Typography sx={{ fontSize: "0.76rem", color: "rgba(245,245,244,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {user.email}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 1.3 }}>
+                            <Chip
+                                label="Starter plan"
+                                size="small"
+                                sx={{
+                                    height: 20,
+                                    fontSize: "0.66rem",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.02em",
+                                    color: "#c4b5fd",
+                                    bgcolor: "rgba(155,123,247,0.12)",
+                                    border: "1px solid rgba(155,123,247,0.3)",
+                                }}
+                            />
+                            <Box sx={{ flexGrow: 1 }} />
+                            <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(245,245,244,0.35)" }}>
+                                Workspace
                             </Typography>
-                            <Typography sx={{ fontFamily: "var(--font-geist-mono)", fontSize: "0.7rem", color: "#c4b5fd", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <Typography sx={{ fontFamily: "var(--font-geist-mono)", fontSize: "0.68rem", color: "rgba(245,245,244,0.55)", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {user.tenantId}
                             </Typography>
                         </Stack>
                     </Box>
                     <Divider sx={{ borderColor: BORDER }} />
-                    <MenuItem
-                        component={Link}
-                        href="/dashboard/settings"
-                        onClick={() => setAnchorEl(null)}
-                        sx={{ fontSize: "0.86rem", py: 1.1, gap: 1.2, "&:hover": { background: "rgba(255,255,255,0.04)" } }}
-                    >
-                        <SettingsIcon sx={{ fontSize: 18, color: "rgba(245,245,244,0.55)" }} />
-                        Settings
+
+                    {/* Account */}
+                    <MenuItem component={Link} href="/dashboard" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
+                        <SpaceDashboardIcon sx={MENU_ICON_SX} />
+                        Overview
                     </MenuItem>
-                    <MenuItem
-                        component={Link}
-                        href="/"
-                        onClick={() => setAnchorEl(null)}
-                        sx={{ fontSize: "0.86rem", py: 1.1, gap: 1.2, "&:hover": { background: "rgba(255,255,255,0.04)" } }}
-                    >
-                        <OpenInNewIcon sx={{ fontSize: 18, color: "rgba(245,245,244,0.55)" }} />
-                        View marketing site
+                    <MenuItem component={Link} href="/dashboard/settings" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
+                        <ManageAccountsIcon sx={MENU_ICON_SX} />
+                        Account &amp; workspace
+                    </MenuItem>
+                    <MenuItem component={Link} href="/dashboard/billing" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
+                        <CreditCardIcon sx={MENU_ICON_SX} />
+                        Billing &amp; plan
                     </MenuItem>
                     <Divider sx={{ borderColor: BORDER }} />
+
+                    {/* Resources */}
+                    <MenuItem component={Link} href="/docs" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
+                        <MenuBookIcon sx={MENU_ICON_SX} />
+                        Documentation
+                    </MenuItem>
+                    <MenuItem component="a" href="mailto:hello@elixpo.com" sx={MENU_ITEM_SX}>
+                        <SupportAgentIcon sx={MENU_ICON_SX} />
+                        Contact support
+                    </MenuItem>
+                    <MenuItem component={Link} href="/" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
+                        <OpenInNewIcon sx={MENU_ICON_SX} />
+                        Marketing site
+                    </MenuItem>
+                    <Divider sx={{ borderColor: BORDER }} />
+
+                    {/* Session */}
                     <MenuItem
                         component="a"
                         href="/api/auth/logout"
                         sx={{
                             fontSize: "0.86rem",
-                            py: 1.1,
-                            gap: 1.2,
+                            py: 1.0,
+                            gap: 1.3,
                             color: "#fca5a5",
                             "&:hover": { background: "rgba(239,68,68,0.08)", color: "#fecaca" },
                         }}

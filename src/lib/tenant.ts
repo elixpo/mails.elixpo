@@ -17,6 +17,14 @@ export interface TenantRow {
     status: string;
 }
 
+/** Fetch a tenant by id (or null). */
+export async function getTenant(db: D1Database, id: string): Promise<TenantRow | null> {
+    return (await db
+        .prepare("SELECT * FROM tenants WHERE id = ?")
+        .bind(id)
+        .first()) as TenantRow | null;
+}
+
 export async function getOrBootstrapTenant(
     db: D1Database,
     uid: string,
