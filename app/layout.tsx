@@ -5,8 +5,8 @@ import "./globals.css";
 const SITE_URL = "https://mail.elixpo.com";
 const OG_IMAGE = {
     url: "/og-image.png",
-    width: 1423,
-    height: 747,
+    width: 1200,
+    height: 630,
     type: "image/png",
     alt: "mail.elixpo — Event-based transactional email",
 };
@@ -75,9 +75,11 @@ export const metadata: Metadata = {
         // Served as static assets from public/. Kept out of app/ so
         // @cloudflare/next-on-pages doesn't turn each into an edge route.
         icon: [
+            { url: "/favicon.ico", sizes: "any" },
             { url: "/icon.png", sizes: "256x256", type: "image/png" },
             { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
         ],
+        shortcut: "/favicon.ico",
         apple: { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
     },
     robots: {
