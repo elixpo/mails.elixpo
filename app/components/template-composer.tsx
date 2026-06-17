@@ -43,6 +43,20 @@ const darkField = {
     "& .MuiInputBase-input::placeholder": { color: "rgba(245,245,244,0.35)", opacity: 1 },
 };
 
+const SAVE_BTN_SX = {
+    textTransform: "none" as const,
+    fontWeight: 700,
+    fontSize: "0.9rem",
+    color: "#fff",
+    px: 2.6,
+    py: 1.1,
+    borderRadius: "10px",
+    background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
+    boxShadow: "0 6px 18px rgba(124,92,255,0.32)",
+    "&:hover": { background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)" },
+    "&.Mui-disabled": { background: "rgba(255,255,255,0.06)", color: "rgba(245,245,244,0.4)" },
+};
+
 export default function TemplateComposer({ templateId }: { templateId?: string }) {
     const router = useRouter();
     const [name, setName] = useState("");
@@ -159,19 +173,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                         onClick={save}
                         disabled={saving}
                         startIcon={saving ? <CircularProgress size={16} sx={{ color: "rgba(245,245,244,0.6)" }} /> : <SaveIcon sx={{ fontSize: "1.1rem !important" }} />}
-                        sx={{
-                            textTransform: "none",
-                            fontWeight: 700,
-                            fontSize: "0.9rem",
-                            color: "#fff",
-                            px: 2.6,
-                            py: 1.1,
-                            borderRadius: "10px",
-                            background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
-                            boxShadow: "0 6px 18px rgba(124,92,255,0.32)",
-                            "&:hover": { background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)" },
-                            "&.Mui-disabled": { background: "rgba(255,255,255,0.06)", color: "rgba(245,245,244,0.4)" },
-                        }}
+                        sx={SAVE_BTN_SX}
                     >
                         {templateId ? "Save changes" : "Create template"}
                     </Button>
@@ -185,21 +187,23 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             )}
 
             <Stack spacing={2.5}>
-                {/* Meta */}
-                <GlassCard>
-                    <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
-                        <Box>
-                            <FieldLabel>Name</FieldLabel>
-                            <TextField value={name} onChange={(e) => setName(e.target.value)} placeholder="Welcome email" fullWidth size="small" sx={darkField} />
-                        </Box>
-                        <Box>
-                            <FieldLabel>Slug</FieldLabel>
-                            <TextField value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="welcome-email (auto from name)" fullWidth size="small" sx={darkField} />
-                        </Box>
-                        <Box sx={{ gridColumn: { sm: "1 / -1" } }}>
-                            <FieldLabel>Subject</FieldLabel>
-                            <TextField value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to {{product}}, {{name}}!" fullWidth size="small" sx={darkField} />
-                        </Box>
+                {/* Body editor — top */}
+                <GlassCard sx={{ p: 0, overflow: "hidden" }}>
+                    <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#f5f5f4" }}>Body</Typography>
+                    </Box>
+                    {/* Extra left padding so BlockNote's block handles (+ / drag)
+                        — which sit in a left gutter outside the text — stay in view. */}
+                    <Box sx={{ minHeight: 380, py: { xs: 2, md: 3 }, pr: { xs: 2, md: 3 }, pl: { xs: 5, md: 7 } }}>
+                        <LixEditor
+                            initialContent={initialContent}
+                            features={EMAIL_FEATURES}
+                            placeholder="Compose your email… type '/' for blocks, {{variables}} for dynamic values"
+                            onReady={(api) => {
+                                apiRef.current = api;
+                            }}
+                            onChange={(ed: any) => setBlocks(ed?.document ?? [])}
+                        />
                     </Box>
                 </GlassCard>
 
@@ -242,23 +246,39 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     )}
                 </GlassCard>
 
-                {/* Editor */}
-                <GlassCard sx={{ p: 0, overflow: "hidden" }}>
-                    <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                        <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#f5f5f4" }}>Body</Typography>
-                    </Box>
-                    <Box sx={{ minHeight: 360, "& .lix-editor-wrapper": { p: 1 } }}>
-                        <LixEditor
-                            initialContent={initialContent}
-                            features={EMAIL_FEATURES}
-                            placeholder="Compose your email… type '/' for blocks, {{variables}} for dynamic values"
-                            onReady={(api) => {
-                                apiRef.current = api;
-                            }}
-                            onChange={(ed: any) => setBlocks(ed?.document ?? [])}
-                        />
+                {/* Metadata — bottom */}
+                <GlassCard>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#f5f5f4", mb: 2 }}>
+                        Details
+                    </Typography>
+                    <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+                        <Box>
+                            <FieldLabel>Name</FieldLabel>
+                            <TextField value={name} onChange={(e) => setName(e.target.value)} placeholder="Welcome email" fullWidth size="small" sx={darkField} />
+                        </Box>
+                        <Box>
+                            <FieldLabel>Slug</FieldLabel>
+                            <TextField value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="welcome-email (auto from name)" fullWidth size="small" sx={darkField} />
+                        </Box>
+                        <Box sx={{ gridColumn: { sm: "1 / -1" } }}>
+                            <FieldLabel>Subject</FieldLabel>
+                            <TextField value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to {{product}}, {{name}}!" fullWidth size="small" sx={darkField} />
+                        </Box>
                     </Box>
                 </GlassCard>
+
+                {/* Create / save — below */}
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1.5}>
+                    {savedMsg && <Typography sx={{ color: "#86efac", fontSize: "0.85rem" }}>Saved</Typography>}
+                    <Button
+                        onClick={save}
+                        disabled={saving}
+                        startIcon={saving ? <CircularProgress size={16} sx={{ color: "rgba(245,245,244,0.6)" }} /> : <SaveIcon sx={{ fontSize: "1.1rem !important" }} />}
+                        sx={SAVE_BTN_SX}
+                    >
+                        {templateId ? "Save changes" : "Create template"}
+                    </Button>
+                </Stack>
             </Stack>
         </Box>
     );
