@@ -5,6 +5,7 @@
 const PREFIXES = {
     tenant: "tenant",
     sender: "snd",
+    alias: "alias", // an additional From identity on a sender (support@, accounts@…)
     product: "prod", // groups templates + holds client_id/shared-secret
     template: "tmpl",
     webhook: "whk", // 1:1 with a template; public inbound trigger

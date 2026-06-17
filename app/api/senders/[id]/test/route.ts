@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { decryptSecret } from "@/lib/encryption";
 import { getSession } from "@/lib/session";
-import { getSender, markSenderVerified } from "@/lib/senders";
+import { getAlias, getSender, markSenderVerified } from "@/lib/senders";
 import { relayViaSender } from "@/lib/smtp-sender";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,6 +35,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ ok: false, error: "Enter a valid recipient." }, { status: 400 });
     }
 
+    // Optionally send "as" one of the sender's aliases (support@, accounts@…).
+    let fromEmail = sender.email;
+    let fromName = sender.display_name;
+    if (typeof body?.aliasId === "string" && body.aliasId) {
+        const alias = await getAlias(db, session.tenantId, id, body.aliasId);
+        if (!alias) {
+            return NextResponse.json({ ok: false, error: "Unknown alias." }, { status: 400 });
+        }
+        fromEmail = alias.from_email;
+        fromName = alias.from_name;
+    }
+
     let pass: string;
     try {
         pass = await decryptSecret(sender.app_password_enc);
@@ -51,8 +63,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         secure: sender.smtp_secure,
         user: sender.username || sender.email,
         pass,
-        from: sender.email,
-        fromName: sender.display_name,
+        from: fromEmail,
+        fromName,
         to,
         subject: "Your mail.elixpo sender is working ✅",
         html: testHtml(sender.email),

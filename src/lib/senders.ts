@@ -192,7 +192,8 @@ export async function markSenderVerified(
 }
 
 export async function deleteSender(db: D1Database, tenantId: string, id: string): Promise<void> {
-    // Detach from any product that used this as its default sender, then delete.
+    // Detach from any product/template that used this sender, drop its aliases,
+    // then delete the sender itself.
     await db
         .prepare("UPDATE products SET default_sender_id = NULL WHERE default_sender_id = ? AND tenant_id = ?")
         .bind(id, tenantId)
@@ -200,5 +201,94 @@ export async function deleteSender(db: D1Database, tenantId: string, id: string)
     await db.prepare("UPDATE templates SET sender_id = NULL WHERE sender_id = ? AND tenant_id = ?")
         .bind(id, tenantId)
         .run();
+    await db.prepare("DELETE FROM sender_aliases WHERE sender_id = ? AND tenant_id = ?")
+        .bind(id, tenantId)
+        .run();
     await db.prepare("DELETE FROM senders WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+}
+
+// ─── Aliases (additional From identities on a sender) ───────────────────────
+
+export interface AliasRow {
+    id: string;
+    tenant_id: string;
+    sender_id: string;
+    from_email: string;
+    from_name: string | null;
+    created_at: string;
+}
+
+export interface AliasPublic {
+    id: string;
+    from_email: string;
+    from_name: string | null;
+    created_at: string;
+}
+
+export function aliasToPublic(row: AliasRow): AliasPublic {
+    return {
+        id: row.id,
+        from_email: row.from_email,
+        from_name: row.from_name,
+        created_at: row.created_at,
+    };
+}
+
+export async function listAliases(
+    db: D1Database,
+    tenantId: string,
+    senderId: string,
+): Promise<AliasRow[]> {
+    const res = await db
+        .prepare(
+            "SELECT * FROM sender_aliases WHERE sender_id = ? AND tenant_id = ? ORDER BY created_at ASC",
+        )
+        .bind(senderId, tenantId)
+        .all();
+    return (res.results || []) as unknown as AliasRow[];
+}
+
+export async function getAlias(
+    db: D1Database,
+    tenantId: string,
+    senderId: string,
+    aliasId: string,
+): Promise<AliasRow | null> {
+    return (await db
+        .prepare(
+            "SELECT * FROM sender_aliases WHERE id = ? AND sender_id = ? AND tenant_id = ?",
+        )
+        .bind(aliasId, senderId, tenantId)
+        .first()) as AliasRow | null;
+}
+
+export async function addAlias(
+    db: D1Database,
+    tenantId: string,
+    senderId: string,
+    fromEmail: string,
+    fromName?: string | null,
+): Promise<AliasRow> {
+    const id = newId("alias");
+    await db
+        .prepare(
+            "INSERT INTO sender_aliases (id, tenant_id, sender_id, from_email, from_name) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind(id, tenantId, senderId, fromEmail.trim(), fromName?.trim() || null)
+        .run();
+    const row = await getAlias(db, tenantId, senderId, id);
+    if (!row) throw new Error("alias insert failed");
+    return row;
+}
+
+export async function deleteAlias(
+    db: D1Database,
+    tenantId: string,
+    senderId: string,
+    aliasId: string,
+): Promise<void> {
+    await db
+        .prepare("DELETE FROM sender_aliases WHERE id = ? AND sender_id = ? AND tenant_id = ?")
+        .bind(aliasId, senderId, tenantId)
+        .run();
 }
