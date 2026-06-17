@@ -26,6 +26,14 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
             { label: "Contact", href: "mailto:hello@elixpo.com" },
         ],
     },
+    {
+        heading: "Legal",
+        links: [
+            { label: "Privacy", href: "/privacy" },
+            { label: "Terms", href: "/terms" },
+            { label: "Content Policy", href: "/content-policy" },
+        ],
+    },
 ];
 
 const Footer = () => {

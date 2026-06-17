@@ -8,6 +8,9 @@ const ROUTES: Array<[string, number]> = [
     ["", 1],
     ["/docs", 0.8],
     ["/login", 0.4],
+    ["/privacy", 0.3],
+    ["/terms", 0.3],
+    ["/content-policy", 0.3],
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

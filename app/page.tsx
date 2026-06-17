@@ -20,6 +20,7 @@ import WavingHandIcon from "@mui/icons-material/WavingHand";
 import WebhookIcon from "@mui/icons-material/Webhook";
 import { Box, Button, Chip, Container, Stack, Typography } from "@mui/material";
 import Link from "next/link";
+import type React from "react";
 import CodeBlock from "./components/code-block";
 import { GlassCard } from "./components/glass-card";
 import PageShell from "./components/page-shell";
