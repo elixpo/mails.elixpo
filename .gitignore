@@ -6,8 +6,10 @@
 /build
 
 # env / secrets
-.env
+# .env is SOPS-encrypted ciphertext and IS committed (safe to be public).
+# .env.local is plaintext dev secrets — never commit.
 .env.local
+.env*.local
 .dev.vars
 *.tmp
 
