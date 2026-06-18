@@ -8,7 +8,7 @@ const PREFIXES = {
     alias: "alias", // an additional From identity on a sender (support@, accounts@…)
     product: "prod", // groups templates + holds client_id/shared-secret
     template: "tmpl",
-    webhook: "whk", // 1:1 with a template; public inbound trigger
+    webhook: "whk", // named inbound trigger on a template (1:many); public endpoint
     delivery: "dlv", // a delivery log row
 } as const;
 
