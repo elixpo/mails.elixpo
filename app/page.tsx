@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import CodeBlock from "./components/code-block";
 import { GlassCard } from "./components/glass-card";
 import PageShell from "./components/page-shell";
+import PixelHero from "./components/pixel-hero";
 
 const ACCENT = "#9b7bf7";
 const TEXT = "#f5f5f4";
@@ -217,77 +218,15 @@ export default function Home() {
     return (
         <PageShell variant="default">
             {/* ── Hero ─────────────────────────────────────────────────────── */}
-            <Container maxWidth="lg" sx={{ position: "relative", pt: { xs: 8, md: 13 }, pb: { xs: 4, md: 6 } }}>
-                <Stack alignItems="center" textAlign="center" spacing={3}>
-                    <Chip
-                        label="Event-based transactional email"
-                        sx={{
-                            bgcolor: "rgba(155,123,247,0.12)",
-                            color: "#c4b5fd",
-                            fontWeight: 600,
-                            letterSpacing: "0.04em",
-                            border: "1px solid rgba(155,123,247,0.3)",
-                        }}
-                    />
-                    <Typography
-                        component="h1"
-                        sx={{
-                            fontWeight: 800,
-                            fontSize: { xs: "2.4rem", md: "3.9rem" },
-                            letterSpacing: "-0.025em",
-                            lineHeight: 1.04,
-                            color: TEXT,
-                            maxWidth: 900,
-                        }}
-                    >
-                        Send transactional email{" "}
-                        <Box component="span" sx={{ color: ACCENT }}>
-                            without building mail infra.
-                        </Box>
-                    </Typography>
-                    <Typography
-                        sx={{
-                            maxWidth: 660,
-                            color: TEXT_65,
-                            fontSize: { xs: "1rem", md: "1.2rem" },
-                            lineHeight: 1.7,
-                        }}
-                    >
-                        Bring your own sender, design email templates with{" "}
-                        <Box component="span" sx={{ fontFamily: "var(--font-geist-mono)", color: "#86efac" }}>
-                            {"{{variables}}"}
-                        </Box>{" "}
-                        in a live editor, and trigger sends from your service via a webhook
-                        — one config, one event, delivered.
-                    </Typography>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.6} sx={{ pt: 1 }}>
-                        <PrimaryCta authed={authed} signedOutLabel="Get started — Sign in with Elixpo" />
-                        <Button
-                            component={Link}
-                            href="/docs"
-                            sx={{
-                                textTransform: "none",
-                                fontWeight: 700,
-                                fontSize: "1rem",
-                                color: TEXT,
-                                px: 3.2,
-                                py: 1.4,
-                                borderRadius: "12px",
-                                border: "1px solid rgba(255,255,255,0.16)",
-                                "&:hover": { borderColor: "rgba(155,123,247,0.5)", background: "rgba(155,123,247,0.06)" },
-                            }}
-                        >
-                            Read the docs
-                        </Button>
-                    </Stack>
-                </Stack>
+            <PixelHero authed={authed} />
 
+            {/* ── See it work: request → delivery + trust ──────────────────── */}
+            <Container maxWidth="lg" sx={{ pt: { xs: 4, md: 8 }, pb: { xs: 4, md: 6 } }}>
                 {/* Request → delivery artifact */}
                 <Box
                     sx={{
                         maxWidth: 900,
                         mx: "auto",
-                        mt: { xs: 6, md: 8 },
                         display: "grid",
                         gap: 2.5,
                         gridTemplateColumns: { xs: "1fr", md: "1.35fr 1fr" },

@@ -168,8 +168,9 @@ const PIXELS = [
     "#7c5cff",
 ];
 
-/* Raw payment-brand logos for the hero strip (no boxes). Brand colours are
- * lifted slightly so they stay legible on the dark hero. */
+/* Raw mailbox-provider wordmarks for the hero strip (no boxes) — reinforces
+ * "bring your own sender": Elixpo Mails relays through whichever mailbox you
+ * connect. Brand colours are lifted slightly so they stay legible on dark. */
 const wordmark: CSSProperties = {
     fontFamily: "var(--font-geist-sans), sans-serif",
     fontWeight: 800,
@@ -183,50 +184,30 @@ const wordmark: CSSProperties = {
 };
 const tint = (color: string): CSSProperties => ({ ...wordmark, color });
 
-function MastercardMark() {
-    return (
-        <svg width="42" height="26" viewBox="0 0 42 26" aria-hidden="true" style={{ display: "block" }}>
-            <circle cx="16" cy="13" r="11" fill="#eb001b" />
-            <circle cx="26" cy="13" r="11" fill="#f79e1b" />
-            <path d="M21 4.6a11 11 0 0 1 0 16.8 11 11 0 0 1 0-16.8z" fill="#ff5f00" />
-        </svg>
-    );
-}
-
-const PAY_BRANDS: { name: string; node: ReactNode }[] = [
-    { name: "Razorpay", node: <span style={tint("#5b9bff")}>Razorpay</span> },
-    { name: "Stripe", node: <span style={{ ...tint("#8b85ff"), letterSpacing: "-0.04em" }}>stripe</span> },
-    { name: "Visa", node: <span style={{ ...tint("#eef1ff"), fontStyle: "italic", letterSpacing: "0.04em" }}>VISA</span> },
-    { name: "Mastercard", node: <MastercardMark /> },
+const MAIL_BRANDS: { name: string; node: ReactNode }[] = [
     {
-        name: "UPI",
+        name: "Gmail",
         node: (
             <span style={wordmark}>
-                <b style={{ color: "#2ecc71" }}>U</b>
-                <b style={{ color: "#ff7a2f" }}>P</b>
-                <b style={{ color: "#2ecc71" }}>I</b>
+                <b style={{ color: "#ea4335" }}>G</b>
+                <b style={{ color: "#f5f5f4" }}>mail</b>
             </span>
         ),
     },
+    { name: "Outlook", node: <span style={tint("#3b9dff")}>Outlook</span> },
+    { name: "Yahoo Mail", node: <span style={tint("#a06bff")}>Yahoo</span> },
+    { name: "iCloud Mail", node: <span style={tint("#5ac8fa")}>iCloud</span> },
+    { name: "Zoho Mail", node: <span style={tint("#ff6a5a")}>Zoho</span> },
     {
-        name: "RuPay",
+        name: "Proton Mail",
         node: (
             <span style={wordmark}>
-                <b style={{ color: "#7e9bff" }}>Ru</b>
-                <b style={{ color: "#ff8a3d" }}>Pay</b>
+                <b style={{ color: "#9b7bf7" }}>Proton</b>
             </span>
         ),
     },
-    {
-        name: "PayPal",
-        node: (
-            <span style={{ ...wordmark, fontStyle: "italic" }}>
-                <b style={{ color: "#4d94ff" }}>Pay</b>
-                <b style={{ color: "#7fd3ff" }}>Pal</b>
-            </span>
-        ),
-    },
-    { name: "Amex", node: <span style={tint("#4a9fe0")}>AMEX</span> },
+    { name: "Fastmail", node: <span style={tint("#4d94ff")}>Fastmail</span> },
+    { name: "Any SMTP", node: <span style={{ ...tint("rgba(245,245,244,0.7)"), letterSpacing: "0.06em" }}>SMTP</span> },
 ];
 
 const ArrowRight = () => (
@@ -235,7 +216,10 @@ const ArrowRight = () => (
     </svg>
 );
 
-export default function PixelHero() {
+export default function PixelHero({ authed }: { authed?: boolean | null }) {
+    const signedIn = authed === true;
+    const primaryHref = signedIn ? "/dashboard" : "/api/auth/login";
+    const primaryLabel = signedIn ? "Go to your dashboard" : "Get started with Elixpo";
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         const t = setTimeout(() => setMounted(true), 50);
@@ -313,7 +297,7 @@ export default function PixelHero() {
                         backdropFilter: "blur(8px)",
                     }}
                 >
-                    Centralized Distributed Payments
+                    Event-based transactional email
                 </span>
             </div>
 
@@ -343,7 +327,7 @@ export default function PixelHero() {
                         textShadow: "0 12px 40px rgba(0,0,0,0.5)",
                     }}
                 >
-                    Payments
+                    Email
                 </span>
                 <span
                     style={{
@@ -373,8 +357,9 @@ export default function PixelHero() {
                     animation: mounted ? "pay-rise 0.8s ease 0.15s both" : undefined,
                 }}
             >
-                Accept payments, grant entitlements, and settle payouts — one API
-                and one dashboard for every product you ship.
+                Bring your own sender, design templates with {"{{variables}}"} in a
+                live editor, and trigger sends from your service via a webhook —
+                without building mail infrastructure.
             </p>
 
             {/* CTAs — Tahoe glass buttons */}
@@ -394,7 +379,7 @@ export default function PixelHero() {
                 }}
             >
                 <Link
-                    href="/login"
+                    href={primaryHref}
                     style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -411,7 +396,7 @@ export default function PixelHero() {
                             "inset 0 1px 1px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.2), 0 14px 30px rgba(124,92,255,0.35)",
                     }}
                 >
-                    Prepare for Payouts
+                    {primaryLabel}
                     <ArrowRight />
                 </Link>
                 <Link
@@ -454,6 +439,17 @@ export default function PixelHero() {
                     transitionDelay: "0.55s",
                 }}
             >
+                <span
+                    style={{
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.04em",
+                        color: "rgba(245,245,244,0.45)",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Bring your own sender — works with any mailbox
+                </span>
                 <div
                     style={{
                         position: "relative",
@@ -469,7 +465,7 @@ export default function PixelHero() {
                     <div className="pay-marquee" style={{ display: "flex", width: "max-content", gap: 52, padding: "4px 0" }}>
                         {[0, 1].map((dup) => (
                             <div key={dup} style={{ display: "flex", gap: 52, alignItems: "center" }} aria-hidden={dup === 1}>
-                                {PAY_BRANDS.map((b) => (
+                                {MAIL_BRANDS.map((b) => (
                                     <span key={`${dup}-${b.name}`} aria-label={b.name} style={{ display: "inline-flex", alignItems: "center" }}>
                                         {b.node}
                                     </span>

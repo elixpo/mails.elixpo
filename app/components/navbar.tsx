@@ -1,9 +1,11 @@
 "use client";
 
+import CloseIcon from "@mui/icons-material/Close";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import MenuIcon from "@mui/icons-material/Menu";
 import StarIcon from "@mui/icons-material/Star";
-import { Avatar, Box, Button, Chip, Stack, Toolbar, Typography } from "@mui/material";
+import { Avatar, Box, Button, Chip, Drawer, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -34,6 +36,7 @@ const Navbar = () => {
     const [stars, setStars] = useState<number | null>(null);
     // undefined = checking, null = signed out, Me = signed in
     const [me, setMe] = useState<Me | null | undefined>(undefined);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -275,8 +278,98 @@ const Navbar = () => {
                             Sign in
                         </Button>
                     )}
+
+                    {/* Mobile hamburger */}
+                    <IconButton
+                        onClick={() => setDrawerOpen(true)}
+                        aria-label="Open menu"
+                        sx={{ display: { xs: "inline-flex", md: "none" }, color: "rgba(244,244,246,0.85)" }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                 </Stack>
             </Toolbar>
+
+            {/* Mobile nav drawer */}
+            <Drawer
+                anchor="right"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                sx={{ display: { md: "none" } }}
+                PaperProps={{
+                    sx: {
+                        width: 282,
+                        background: "#0d1016",
+                        borderLeft: "1px solid rgba(255,255,255,0.08)",
+                        color: "#f5f5f4",
+                        p: 2,
+                    },
+                }}
+            >
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2, px: 0.5 }}>
+                    <Stack direction="row" alignItems="center" spacing={1.1}>
+                        <Box component="img" src="/mark.png" alt="Elixpo Mails" sx={{ height: 26, width: 26, borderRadius: "7px" }} />
+                        <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
+                            Elixpo
+                            <Box component="span" sx={{ color: ACCENT }}>
+                                {" "}
+                                Mails
+                            </Box>
+                        </Typography>
+                    </Stack>
+                    <IconButton onClick={() => setDrawerOpen(false)} aria-label="Close menu" sx={{ color: "rgba(245,245,244,0.6)" }}>
+                        <CloseIcon />
+                    </IconButton>
+                </Stack>
+
+                {me ? (
+                    // Signed in: the app routes (no sign out here — that lives in the dashboard).
+                    <DashboardNavLinks orientation="vertical" onNavigate={() => setDrawerOpen(false)} />
+                ) : (
+                    <Stack spacing={0.5}>
+                        {LINKS.map((l) => (
+                            <Button
+                                key={l.label}
+                                component={Link}
+                                href={l.href}
+                                onClick={() => setDrawerOpen(false)}
+                                sx={{
+                                    justifyContent: "flex-start",
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                    fontSize: "0.95rem",
+                                    color: "rgba(244,244,246,0.8)",
+                                    px: 1.5,
+                                    py: 1.1,
+                                    borderRadius: "10px",
+                                    "&:hover": { color: "#fff", background: "rgba(255,255,255,0.05)" },
+                                }}
+                            >
+                                {l.label}
+                            </Button>
+                        ))}
+                        <Button
+                            component="a"
+                            href="/api/auth/login"
+                            onClick={() => setDrawerOpen(false)}
+                            sx={{
+                                mt: 1,
+                                textTransform: "none",
+                                fontWeight: 700,
+                                fontSize: "0.95rem",
+                                color: "#fff",
+                                background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
+                                borderRadius: "10px",
+                                py: 1.1,
+                                boxShadow: "0 4px 14px rgba(155,123,247,0.32)",
+                                "&:hover": { background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)" },
+                            }}
+                        >
+                            Sign in
+                        </Button>
+                    </Stack>
+                )}
+            </Drawer>
         </AppBar>
     );
 };
