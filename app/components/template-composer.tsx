@@ -11,7 +11,7 @@ import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { extractVariables } from "@/lib/template-vars";
 import { GHOST_BTN } from "./dashboard-ui";
-import { GlassCard } from "./glass-card";
+import { BORDER, GlassCard, SURFACE } from "./glass-card";
 import LixEditor from "./lix-editor";
 import TemplateTestDialog from "./template-test-dialog";
 
@@ -65,6 +65,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [subject, setSubject] = useState("");
+    const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+    const [productId, setProductId] = useState("");
     const [initialContent, setInitialContent] = useState<any[] | undefined>(undefined);
     const [blocks, setBlocks] = useState<any[]>([]);
     const apiRef = useRef<any>(null);
@@ -74,6 +76,25 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [error, setError] = useState<string | null>(null);
     const [savedMsg, setSavedMsg] = useState(false);
     const [testOpen, setTestOpen] = useState(false);
+
+    // Load the tenant's products for the picker.
+    useEffect(() => {
+        let alive = true;
+        fetch("/api/products")
+            .then((r) => r.json())
+            .then((d: any) => {
+                if (!alive) return;
+                if (d?.ok && Array.isArray(d.products)) {
+                    setProducts(
+                        d.products.map((p: any) => ({ id: String(p.id), name: String(p.name) })),
+                    );
+                }
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (!templateId) return;
@@ -87,6 +108,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     setName(t.name || "");
                     setSlug(t.slug || "");
                     setSubject(t.subject || "");
+                    setProductId(t.product_id ? String(t.product_id) : "");
                     setInitialContent(Array.isArray(t.content) ? t.content : undefined);
                     setBlocks(Array.isArray(t.content) ? t.content : []);
                 } else {
@@ -108,8 +130,12 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
 
     // Gate saving: require the details (name + subject) and a non-trivial body.
     const bodyText = useMemo(() => blocksToPlainText(blocks), [blocks]);
+    // New templates must belong to a product; editing keeps the existing rules.
     const canSave =
-        name.trim().length > 0 && subject.trim().length > 0 && bodyText.length > 2;
+        name.trim().length > 0 &&
+        subject.trim().length > 0 &&
+        bodyText.length > 2 &&
+        (Boolean(templateId) || productId.length > 0);
 
     async function save() {
         if (saving) return;
@@ -130,6 +156,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 contentJson,
                 contentHtml,
             };
+            // Templates belong to a product; required on create.
+            if (productId) payload.productId = productId;
             const url = templateId ? `/api/templates/${templateId}` : "/api/templates";
             const res = await fetch(url, {
                 method: templateId ? "PATCH" : "POST",
@@ -277,6 +305,71 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                         Details
                     </Typography>
                     <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+                        <Box sx={{ gridColumn: { sm: "1 / -1" } }}>
+                            <FieldLabel>Product</FieldLabel>
+                            {!templateId && products.length === 0 ? (
+                                <Typography sx={{ color: TEXT_60, fontSize: "0.85rem", py: 1 }}>
+                                    No products yet.{" "}
+                                    <Box
+                                        component={Link}
+                                        href="/dashboard/products"
+                                        sx={{
+                                            color: ACCENT,
+                                            fontWeight: 600,
+                                            textDecoration: "none",
+                                            "&:hover": { textDecoration: "underline" },
+                                        }}
+                                    >
+                                        Create a product first
+                                    </Box>{" "}
+                                    to add a template.
+                                </Typography>
+                            ) : (
+                                <Select
+                                    value={productId}
+                                    onChange={(e) => setProductId(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    renderValue={(val) =>
+                                        val
+                                            ? products.find((p) => p.id === val)?.name ?? "Unknown product"
+                                            : "Select a product"
+                                    }
+                                    sx={{
+                                        color: "#f5f5f4",
+                                        borderRadius: "10px",
+                                        background: "rgba(255,255,255,0.02)",
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
+                                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(155,123,247,0.4)" },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: ACCENT },
+                                        "& .MuiSelect-icon": { color: "rgba(245,245,244,0.4)" },
+                                        "& .MuiSelect-select": { fontSize: "0.95rem", py: 1.1 },
+                                    }}
+                                    MenuProps={{
+                                        slotProps: {
+                                            paper: {
+                                                sx: {
+                                                    background: SURFACE,
+                                                    border: `1px solid ${BORDER}`,
+                                                    backgroundImage: "none",
+                                                    "& .MuiMenuItem-root": { color: "#f5f5f4", fontSize: "0.9rem" },
+                                                    "& .MuiMenuItem-root.Mui-selected": {
+                                                        background: "rgba(155,123,247,0.12)",
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }}
+                                >
+                                    {products.map((p) => (
+                                        <MenuItem key={p.id} value={p.id}>
+                                            {p.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            )}
+                        </Box>
                         <Box>
                             <FieldLabel>Name</FieldLabel>
                             <TextField value={name} onChange={(e) => setName(e.target.value)} placeholder="Welcome email" fullWidth size="small" sx={darkField} />
@@ -297,7 +390,9 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     {savedMsg && <Typography sx={{ color: "#86efac", fontSize: "0.85rem" }}>Saved</Typography>}
                     {!canSave && (
                         <Typography sx={{ color: "rgba(245,245,244,0.45)", fontSize: "0.8rem" }}>
-                            Add a name, subject, and a bit of body content to continue.
+                            {!templateId && !productId
+                                ? "Select a product, then add a name, subject, and a bit of body content to continue."
+                                : "Add a name, subject, and a bit of body content to continue."}
                         </Typography>
                     )}
                     <Button
