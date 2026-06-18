@@ -19,6 +19,7 @@ export interface SenderRow {
     username: string | null;
     app_password_enc: string;
     status: string;
+    is_default: number;
     last_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -34,6 +35,7 @@ export interface SenderPublic {
     smtp_secure: string;
     username: string | null;
     status: string;
+    is_default: boolean;
     last_verified_at: string | null;
     created_at: string;
 }
@@ -48,6 +50,7 @@ export function toPublic(row: SenderRow): SenderPublic {
         smtp_secure: row.smtp_secure,
         username: row.username,
         status: row.status,
+        is_default: row.is_default === 1,
         last_verified_at: row.last_verified_at,
         created_at: row.created_at,
     };
@@ -113,9 +116,40 @@ export async function createSender(
         )
         .run();
 
+    // The tenant's first sender becomes the default automatically.
+    const hasDefault = await db
+        .prepare("SELECT 1 FROM senders WHERE tenant_id = ? AND is_default = 1 LIMIT 1")
+        .bind(tenantId)
+        .first();
+    if (!hasDefault) {
+        await db
+            .prepare("UPDATE senders SET is_default = 1 WHERE id = ? AND tenant_id = ?")
+            .bind(id, tenantId)
+            .run();
+    }
+
     const row = await getSender(db, tenantId, id);
     if (!row) throw new Error("sender insert failed");
     return row;
+}
+
+/** Mark one sender as the tenant default, clearing the previous default. */
+export async function setDefaultSender(
+    db: D1Database,
+    tenantId: string,
+    id: string,
+): Promise<SenderRow | null> {
+    const existing = await getSender(db, tenantId, id);
+    if (!existing) return null;
+    await db
+        .prepare("UPDATE senders SET is_default = 0 WHERE tenant_id = ? AND is_default = 1")
+        .bind(tenantId)
+        .run();
+    await db
+        .prepare("UPDATE senders SET is_default = 1, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+        .bind(id, tenantId)
+        .run();
+    return getSender(db, tenantId, id);
 }
 
 export interface SenderUpdate {
@@ -205,6 +239,20 @@ export async function deleteSender(db: D1Database, tenantId: string, id: string)
         .bind(id, tenantId)
         .run();
     await db.prepare("DELETE FROM senders WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+
+    // If we removed the default, promote the most recent remaining sender.
+    const stillHasDefault = await db
+        .prepare("SELECT 1 FROM senders WHERE tenant_id = ? AND is_default = 1 LIMIT 1")
+        .bind(tenantId)
+        .first();
+    if (!stillHasDefault) {
+        await db
+            .prepare(
+                "UPDATE senders SET is_default = 1 WHERE id = (SELECT id FROM senders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)",
+            )
+            .bind(tenantId)
+            .run();
+    }
 }
 
 // ─── Aliases (additional From identities on a sender) ───────────────────────

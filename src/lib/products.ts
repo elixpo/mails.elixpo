@@ -6,7 +6,8 @@
  */
 
 import type { D1Database } from "@cloudflare/workers-types";
-import { newId } from "./ids";
+import { base64url, sha256Hex } from "./crypto";
+import { isoDaysFromNow, newId } from "./ids";
 
 export interface ProductRow {
     id: string;
@@ -62,13 +63,179 @@ export async function getOrCreateDefaultProduct(
         .first()) as ProductRow | null;
     if (existing) return existing;
 
+    const { product } = await createProduct(db, tenantId, "Default");
+    return product;
+}
+
+// ─── Public projection (no secret hashes) ───────────────────────────────────
+
+export interface ProductPublic {
+    id: string;
+    name: string;
+    client_id: string;
+    has_secret: boolean;
+    default_sender_id: string | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ProductSummary extends ProductPublic {
+    template_count: number;
+    webhook_count: number;
+}
+
+export function productToPublic(row: ProductRow): ProductPublic {
+    return {
+        id: row.id,
+        name: row.name,
+        client_id: row.client_id,
+        has_secret: Boolean(row.secret_hash),
+        default_sender_id: row.default_sender_id,
+        status: row.status,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    };
+}
+
+// ─── Credentials ────────────────────────────────────────────────────────────
+
+/** Generate a fresh shared secret (shown to the user once). */
+function newSecret(): string {
+    const bytes = crypto.getRandomValues(new Uint8Array(24));
+    return `lix_mail_${base64url(bytes.buffer)}`;
+}
+
+async function uniqueClientId(db: D1Database, name: string): Promise<string> {
+    const base = slugify(name);
+    for (let i = 0; i < 5; i++) {
+        const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 6);
+        const candidate = `${base}-${rand}`;
+        const hit = await db
+            .prepare("SELECT 1 FROM products WHERE client_id = ? LIMIT 1")
+            .bind(candidate)
+            .first();
+        if (!hit) return candidate;
+    }
+    return `${base}-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+}
+
+/** Create a product with a client_id + shared secret (returned once). */
+export async function createProduct(
+    db: D1Database,
+    tenantId: string,
+    name: string,
+    defaultSenderId?: string | null,
+): Promise<{ product: ProductRow; secret: string }> {
     const id = newId("product");
-    const clientId = `default-${id.replace("prod_", "").slice(0, 10)}`;
+    const clientId = await uniqueClientId(db, name);
+    const secret = newSecret();
+    const hash = await sha256Hex(secret);
+
     await db
-        .prepare("INSERT INTO products (id, tenant_id, name, client_id) VALUES (?, ?, 'Default', ?)")
-        .bind(id, tenantId, clientId)
+        .prepare(
+            "INSERT INTO products (id, tenant_id, name, client_id, secret_hash, default_sender_id) VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind(id, tenantId, name.trim() || "Untitled product", clientId, hash, defaultSenderId || null)
         .run();
-    const row = await getProduct(db, tenantId, id);
-    if (!row) throw new Error("default product insert failed");
-    return row;
+
+    const product = await getProduct(db, tenantId, id);
+    if (!product) throw new Error("product insert failed");
+    return { product, secret };
+}
+
+/** Rotate the shared secret. Keeps the old hash valid during a grace window. */
+export async function rotateSecret(
+    db: D1Database,
+    tenantId: string,
+    id: string,
+    graceDays = 2,
+): Promise<{ product: ProductRow; secret: string } | null> {
+    const existing = await getProduct(db, tenantId, id);
+    if (!existing) return null;
+    const secret = newSecret();
+    const hash = await sha256Hex(secret);
+    await db
+        .prepare(
+            "UPDATE products SET prev_secret_hash = secret_hash, prev_secret_expires_at = ?, secret_hash = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?",
+        )
+        .bind(isoDaysFromNow(graceDays), hash, id, tenantId)
+        .run();
+    const product = await getProduct(db, tenantId, id);
+    return product ? { product, secret } : null;
+}
+
+export interface ProductUpdate {
+    name?: string;
+    defaultSenderId?: string | null;
+    status?: string;
+}
+
+export async function updateProduct(
+    db: D1Database,
+    tenantId: string,
+    id: string,
+    update: ProductUpdate,
+): Promise<ProductRow | null> {
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+    if (update.name !== undefined) {
+        sets.push("name = ?");
+        vals.push(update.name.trim() || "Untitled product");
+    }
+    if (update.defaultSenderId !== undefined) {
+        sets.push("default_sender_id = ?");
+        vals.push(update.defaultSenderId || null);
+    }
+    if (update.status !== undefined) {
+        sets.push("status = ?");
+        vals.push(update.status);
+    }
+    if (sets.length === 0) return getProduct(db, tenantId, id);
+    sets.push("updated_at = datetime('now')");
+    vals.push(id, tenantId);
+    await db
+        .prepare(`UPDATE products SET ${sets.join(", ")} WHERE id = ? AND tenant_id = ?`)
+        .bind(...vals)
+        .run();
+    return getProduct(db, tenantId, id);
+}
+
+export async function countProductTemplates(
+    db: D1Database,
+    tenantId: string,
+    id: string,
+): Promise<number> {
+    const row = (await db
+        .prepare("SELECT COUNT(*) AS n FROM templates WHERE product_id = ? AND tenant_id = ?")
+        .bind(id, tenantId)
+        .first()) as { n: number } | null;
+    return row?.n ?? 0;
+}
+
+/** Delete a product (caller must ensure it has no templates). Drops its webhooks. */
+export async function deleteProduct(db: D1Database, tenantId: string, id: string): Promise<void> {
+    await db.prepare("DELETE FROM webhooks WHERE product_id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    await db.prepare("DELETE FROM products WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+}
+
+/** List products with template + webhook counts for the dashboard. */
+export async function listProductsWithCounts(
+    db: D1Database,
+    tenantId: string,
+): Promise<ProductSummary[]> {
+    const res = await db
+        .prepare(
+            `SELECT p.*,
+                (SELECT COUNT(*) FROM templates t WHERE t.product_id = p.id) AS template_count,
+                (SELECT COUNT(*) FROM webhooks w WHERE w.product_id = p.id) AS webhook_count
+             FROM products p WHERE p.tenant_id = ? ORDER BY p.created_at ASC`,
+        )
+        .bind(tenantId)
+        .all();
+    return ((res.results || []) as any[]).map((r) => ({
+        ...productToPublic(r as ProductRow),
+        template_count: Number(r.template_count) || 0,
+        webhook_count: Number(r.webhook_count) || 0,
+    }));
 }

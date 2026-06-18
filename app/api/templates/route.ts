@@ -2,7 +2,7 @@ export const runtime = "edge";
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
-import { getOrCreateDefaultProduct, slugify } from "@/lib/products";
+import { getOrCreateDefaultProduct, getProduct, slugify } from "@/lib/products";
 import { getSession } from "@/lib/session";
 import { createTemplate, listTemplates, toSummary } from "@/lib/templates";
 
@@ -38,7 +38,20 @@ export async function POST(request: NextRequest) {
     const slug = (typeof body?.slug === "string" && body.slug.trim()) ? slugify(body.slug) : slugify(name);
 
     const db = await getDatabase();
-    const product = await getOrCreateDefaultProduct(db, session.tenantId);
+    // A template must belong to a product. Use the one the caller chose; fall
+    // back to the tenant's default product only if none was supplied.
+    let product;
+    if (typeof body?.productId === "string" && body.productId) {
+        product = await getProduct(db, session.tenantId, body.productId);
+        if (!product) {
+            return NextResponse.json(
+                { error: "invalid_product", message: "Choose a valid product for this template." },
+                { status: 400 },
+            );
+        }
+    } else {
+        product = await getOrCreateDefaultProduct(db, session.tenantId);
+    }
 
     try {
         const row = await createTemplate(db, session.tenantId, product.id, {

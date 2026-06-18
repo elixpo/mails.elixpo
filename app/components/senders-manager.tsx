@@ -14,6 +14,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import SendIcon from "@mui/icons-material/Send";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
@@ -63,6 +64,7 @@ interface Sender {
     smtp_secure: string; // "tls" | "starttls"
     username: string | null;
     status: string; // "active" | "disabled"
+    is_default: boolean;
     last_verified_at: string | null;
     created_at: string;
 }
@@ -160,6 +162,25 @@ function StatusChip({ status }: { status: string }) {
                 color: active ? GREEN : TEXT_55,
                 bgcolor: active ? "rgba(134,239,172,0.1)" : "rgba(255,255,255,0.05)",
                 border: `1px solid ${active ? "rgba(134,239,172,0.28)" : BORDER}`,
+            }}
+        />
+    );
+}
+
+// ── Default chip ────────────────────────────────────────────────────────────
+function DefaultChip() {
+    return (
+        <Chip
+            label="Default"
+            size="small"
+            sx={{
+                height: 22,
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                color: ACCENT,
+                bgcolor: "rgba(155,123,247,0.1)",
+                border: "1px solid rgba(155,123,247,0.28)",
             }}
         />
     );
@@ -975,16 +996,19 @@ function SenderCard({
     onEdit,
     onDelete,
     onToggleStatus,
+    onSetDefault,
     onTested,
 }: {
     sender: Sender;
     onEdit: () => void;
     onDelete: () => void;
     onToggleStatus: () => void;
+    onSetDefault: () => Promise<void>;
     onTested: () => void;
 }) {
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [test, setTest] = useState<TestState>(null);
+    const [defaultError, setDefaultError] = useState<string | null>(null);
     const verified = !!sender.last_verified_at;
     const active = sender.status === "active";
 
@@ -1076,6 +1100,7 @@ function SenderCard({
                             {sender.email}
                         </Typography>
                         <StatusChip status={sender.status} />
+                        {sender.is_default && <DefaultChip />}
                     </Stack>
 
                     {sender.display_name && (
@@ -1258,6 +1283,22 @@ function SenderCard({
                             <EditOutlinedIcon sx={{ fontSize: 18, color: TEXT_55 }} />
                             Edit
                         </MenuItem>
+                        {!sender.is_default && (
+                            <MenuItem
+                                onClick={async () => {
+                                    setMenuAnchor(null);
+                                    setDefaultError(null);
+                                    try {
+                                        await onSetDefault();
+                                    } catch (e: any) {
+                                        setDefaultError(e?.message || "Could not set as default.");
+                                    }
+                                }}
+                            >
+                                <StarBorderIcon sx={{ fontSize: 18, color: ACCENT }} />
+                                Set as default
+                            </MenuItem>
+                        )}
                         <MenuItem
                             onClick={() => {
                                 setMenuAnchor(null);
@@ -1302,6 +1343,16 @@ function SenderCard({
                         }}
                     >
                         {test.text}
+                    </Typography>
+                </Stack>
+            )}
+
+            {/* Set-default error line */}
+            {defaultError && (
+                <Stack direction="row" spacing={0.8} alignItems="flex-start" sx={{ mt: 1.8 }}>
+                    <ErrorOutlineIcon sx={{ fontSize: 16, color: RED, mt: 0.2 }} />
+                    <Typography sx={{ fontSize: "0.82rem", color: RED, lineHeight: 1.5 }}>
+                        {defaultError}
                     </Typography>
                 </Stack>
             )}
@@ -1402,6 +1453,16 @@ export default function SendersManager() {
         }
     }
 
+    async function setDefault(s: Sender) {
+        const res = await fetch(`/api/senders/${s.id}/default`, { method: "POST" });
+        const data: any = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.ok) {
+            throw new Error(data?.message || data?.error || "Could not set as default.");
+        }
+        // Refresh so the badge moves to the new default.
+        await load();
+    }
+
     // ── Render states ──
     if (loading) {
         return (
@@ -1465,6 +1526,7 @@ export default function SendersManager() {
                                 onEdit={() => openEdit(s)}
                                 onDelete={() => setDeleting(s)}
                                 onToggleStatus={() => toggleStatus(s)}
+                                onSetDefault={() => setDefault(s)}
                                 onTested={load}
                             />
                         ))}
