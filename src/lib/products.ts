@@ -7,7 +7,8 @@
 
 import type { D1Database } from "@cloudflare/workers-types";
 import { base64url, sha256Hex } from "./crypto";
-import { isoDaysFromNow, newId } from "./ids";
+import { decryptSecret, encryptSecret } from "./encryption";
+import { isoDaysFromNow, newId, nowIso } from "./ids";
 
 export interface ProductRow {
     id: string;
@@ -17,6 +18,8 @@ export interface ProductRow {
     secret_hash: string | null;
     prev_secret_hash: string | null;
     prev_secret_expires_at: string | null;
+    secret_enc: string | null; // AES-GCM encrypted secret — recoverable for HMAC signing
+    prev_secret_enc: string | null; // previous secret during rotation grace
     default_sender_id: string | null;
     status: string;
     created_at: string;
@@ -131,12 +134,13 @@ export async function createProduct(
     const clientId = await uniqueClientId(db, name);
     const secret = newSecret();
     const hash = await sha256Hex(secret);
+    const enc = await encryptSecret(secret);
 
     await db
         .prepare(
-            "INSERT INTO products (id, tenant_id, name, client_id, secret_hash, default_sender_id) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO products (id, tenant_id, name, client_id, secret_hash, secret_enc, default_sender_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
-        .bind(id, tenantId, name.trim() || "Untitled product", clientId, hash, defaultSenderId || null)
+        .bind(id, tenantId, name.trim() || "Untitled product", clientId, hash, enc, defaultSenderId || null)
         .run();
 
     const product = await getProduct(db, tenantId, id);
@@ -155,14 +159,55 @@ export async function rotateSecret(
     if (!existing) return null;
     const secret = newSecret();
     const hash = await sha256Hex(secret);
+    const enc = await encryptSecret(secret);
     await db
         .prepare(
-            "UPDATE products SET prev_secret_hash = secret_hash, prev_secret_expires_at = ?, secret_hash = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?",
+            `UPDATE products SET
+                prev_secret_hash = secret_hash,
+                prev_secret_enc = secret_enc,
+                prev_secret_expires_at = ?,
+                secret_hash = ?,
+                secret_enc = ?,
+                updated_at = datetime('now')
+             WHERE id = ? AND tenant_id = ?`,
         )
-        .bind(isoDaysFromNow(graceDays), hash, id, tenantId)
+        .bind(isoDaysFromNow(graceDays), hash, enc, id, tenantId)
         .run();
     const product = await getProduct(db, tenantId, id);
     return product ? { product, secret } : null;
+}
+
+/**
+ * Recover the signing secrets needed to verify an inbound HMAC signature:
+ * the current secret, plus the previous one if its rotation grace window is
+ * still open. Returns null secrets where unavailable (e.g. a product created
+ * before secret_enc existed — it must rotate its secret to enable signing).
+ */
+export async function getSigningSecrets(
+    product: ProductRow,
+): Promise<{ secret: string | null; prevSecret: string | null; prevValid: boolean }> {
+    let secret: string | null = null;
+    if (product.secret_enc) {
+        try {
+            secret = await decryptSecret(product.secret_enc);
+        } catch {
+            secret = null;
+        }
+    }
+    let prevSecret: string | null = null;
+    const prevValid = Boolean(
+        product.prev_secret_enc &&
+            product.prev_secret_expires_at &&
+            product.prev_secret_expires_at > nowIso(),
+    );
+    if (prevValid && product.prev_secret_enc) {
+        try {
+            prevSecret = await decryptSecret(product.prev_secret_enc);
+        } catch {
+            prevSecret = null;
+        }
+    }
+    return { secret, prevSecret, prevValid: prevValid && Boolean(prevSecret) };
 }
 
 export interface ProductUpdate {

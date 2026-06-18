@@ -1,13 +1,12 @@
 export const runtime = "edge";
 
 import { type NextRequest, NextResponse } from "next/server";
-import { sha256Hex, timingSafeEqual } from "@/lib/crypto";
 import { getDatabase } from "@/lib/d1-client";
 import { deliveryToPublic, findByIdempotencyKey } from "@/lib/deliveries";
-import { nowIso } from "@/lib/ids";
-import { getProduct } from "@/lib/products";
+import { getProduct, getSigningSecrets } from "@/lib/products";
 import { deliverTemplate } from "@/lib/send-pipeline";
 import { getTemplate } from "@/lib/templates";
+import { SIGNATURE_HEADER, parseSignatureHeader, verifySignature } from "@/lib/webhook-signing";
 import { getWebhookByEndpointKey } from "@/lib/webhooks";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,21 +15,15 @@ function json(body: any, status = 200) {
     return NextResponse.json(body, { status });
 }
 
-/** Pull the Bearer token from Authorization (or x-elixpo-secret as a fallback). */
-function extractSecret(request: NextRequest): string {
-    const auth = request.headers.get("authorization") || "";
-    const m = auth.match(/^Bearer\s+(.+)$/i);
-    if (m) return m[1].trim();
-    return (request.headers.get("x-elixpo-secret") || "").trim();
-}
-
 /**
- * POST /v1/hooks/:key — public trigger endpoint.
+ * POST /v1/hooks/:key — public trigger endpoint, authenticated by HMAC request
+ * signing (Stripe-style).
  *
- * Auth: the parent product's shared secret as a Bearer token
- *   Authorization: Bearer lix_mail_xxx
- * We store only sha256(secret); the presented token is hashed and compared to
- * the current secret (and the previous one during a rotation grace window).
+ * Headers:
+ *   X-Elixpo-Signature: t=<unix_seconds>,v1=<hex hmac-sha256 of `${t}.${rawBody}`>
+ * signed with the parent product's shared secret. Requests outside a 5-minute
+ * tolerance, or with a bad signature, are rejected. During a secret rotation
+ * the previous secret is accepted until its grace window expires.
  *
  * Body (JSON):
  *   { "to": "user@example.com", "variables": { ... }, "idempotency_key"?: "..." }
@@ -54,32 +47,46 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (product.status !== "active") {
         return json({ ok: false, error: "product_disabled" }, 403);
     }
-    if (!product.secret_hash) {
-        return json({ ok: false, error: "no_credentials" }, 403);
+
+    // Recover the signing secret(s). A product created before signed secrets
+    // existed has none until it rotates — surface that clearly.
+    const { secret, prevSecret, prevValid } = await getSigningSecrets(product);
+    if (!secret) {
+        return json(
+            {
+                ok: false,
+                error: "no_signing_secret",
+                message: "Rotate this product's secret to enable signed requests.",
+            },
+            403,
+        );
     }
 
-    // ── Authenticate with the shared secret (Bearer) ──────────────────────────
-    const presented = extractSecret(request);
-    if (!presented) {
+    // ── Read the RAW body (signature covers the exact bytes) ──────────────────
+    const rawBody = await request.text();
+
+    // ── Verify the signature ──────────────────────────────────────────────────
+    const sig = parseSignatureHeader(request.headers.get(SIGNATURE_HEADER));
+    if (!sig) {
         return json(
-            { ok: false, error: "missing_credentials", message: "Send Authorization: Bearer <product secret>." },
+            {
+                ok: false,
+                error: "missing_signature",
+                message: `Sign the request: ${SIGNATURE_HEADER}: t=<unix>,v1=<hmac_sha256 of "t.body">.`,
+            },
             401,
         );
     }
-    const presentedHash = await sha256Hex(presented);
-    let authed = timingSafeEqual(presentedHash, product.secret_hash);
-    if (!authed && product.prev_secret_hash && product.prev_secret_expires_at) {
-        // Previous secret is honored until its grace window expires.
-        if (product.prev_secret_expires_at > nowIso()) {
-            authed = timingSafeEqual(presentedHash, product.prev_secret_hash);
-        }
+    const verdict = await verifySignature(sig, rawBody, { secret, prevSecret, prevValid });
+    if (!verdict.ok) {
+        const status = verdict.reason === "timestamp_out_of_tolerance" ? 400 : 401;
+        return json({ ok: false, error: verdict.reason }, status);
     }
-    if (!authed) return json({ ok: false, error: "invalid_credentials" }, 401);
 
     // ── Parse + validate the payload ──────────────────────────────────────────
     let body: any;
     try {
-        body = await request.json();
+        body = JSON.parse(rawBody || "{}");
     } catch {
         return json({ ok: false, error: "invalid_json" }, 400);
     }
