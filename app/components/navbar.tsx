@@ -1,11 +1,13 @@
 "use client";
 
 import GitHubIcon from "@mui/icons-material/GitHub";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import StarIcon from "@mui/icons-material/Star";
 import { Avatar, Box, Button, Chip, Stack, Toolbar, Typography } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { DashboardNavLinks } from "./dashboard-nav";
 
 interface Me {
     name: string;
@@ -119,46 +121,51 @@ const Navbar = () => {
                             Mails
                         </Box>
                     </Typography>
-                    <Chip
-                        label="EMAIL"
-                        size="small"
-                        sx={{
-                            display: { xs: "none", sm: "inline-flex" },
-                            bgcolor: "rgba(155, 123, 247, 0.12)",
-                            color: ACCENT,
-                            fontSize: "10px",
-                            height: "22px",
-                            fontWeight: 600,
-                            letterSpacing: "0.04em",
-                            border: "1px solid rgba(155, 123, 247, 0.3)",
-                        }}
-                    />
+                    {!me && (
+                        <Chip
+                            label="EMAIL"
+                            size="small"
+                            sx={{
+                                display: { xs: "none", sm: "inline-flex" },
+                                bgcolor: "rgba(155, 123, 247, 0.12)",
+                                color: ACCENT,
+                                fontSize: "10px",
+                                height: "22px",
+                                fontWeight: 600,
+                                letterSpacing: "0.04em",
+                                border: "1px solid rgba(155, 123, 247, 0.3)",
+                            }}
+                        />
+                    )}
                 </Link>
 
-                <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ flexGrow: 1, justifyContent: "center", display: { xs: "none", md: "flex" } }}
-                >
-                    {LINKS.map((l) => (
-                        <Button
-                            key={l.label}
-                            component={Link}
-                            href={l.href}
-                            sx={{
-                                textTransform: "none",
-                                fontWeight: 600,
-                                fontSize: "0.88rem",
-                                color: "rgba(244,244,246,0.7)",
-                                px: 1.6,
-                                borderRadius: "9px",
-                                "&:hover": { color: "#fff", background: "rgba(255,255,255,0.05)" },
-                            }}
-                        >
-                            {l.label}
-                        </Button>
-                    ))}
-                </Stack>
+                <Box sx={{ flexGrow: 1, justifyContent: "center", display: { xs: "none", md: "flex" } }}>
+                    {me === undefined ? null : me ? (
+                        // Signed in: show the app routes (same as the dashboard nav).
+                        <DashboardNavLinks orientation="horizontal" />
+                    ) : (
+                        <Stack direction="row" spacing={0.5}>
+                            {LINKS.map((l) => (
+                                <Button
+                                    key={l.label}
+                                    component={Link}
+                                    href={l.href}
+                                    sx={{
+                                        textTransform: "none",
+                                        fontWeight: 600,
+                                        fontSize: "0.88rem",
+                                        color: "rgba(244,244,246,0.7)",
+                                        px: 1.6,
+                                        borderRadius: "9px",
+                                        "&:hover": { color: "#fff", background: "rgba(255,255,255,0.05)" },
+                                    }}
+                                >
+                                    {l.label}
+                                </Button>
+                            ))}
+                        </Stack>
+                    )}
+                </Box>
 
                 <Box sx={{ flexGrow: { xs: 1, md: 0 } }} />
 
