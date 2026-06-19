@@ -5,7 +5,7 @@ import DataObjectIcon from "@mui/icons-material/DataObject";
 import SaveIcon from "@mui/icons-material/Save";
 import SendIcon from "@mui/icons-material/Send";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Box, Button, Chip, CircularProgress, MenuItem, Select, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Chip, CircularProgress, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -109,8 +109,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [subject, setSubject] = useState("");
-    const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
-    const [productId, setProductId] = useState("");
     const [initialContent, setInitialContent] = useState<any[] | undefined>(undefined);
     const [blocks, setBlocks] = useState<any[]>([]);
     const apiRef = useRef<any>(null);
@@ -137,25 +135,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [showPreview, setShowPreview] = useState(true);
     const [previewHtml, setPreviewHtml] = useState("");
 
-    // Load the tenant's products for the picker.
-    useEffect(() => {
-        let alive = true;
-        fetch("/api/products")
-            .then((r) => r.json())
-            .then((d: any) => {
-                if (!alive) return;
-                if (d?.ok && Array.isArray(d.products)) {
-                    setProducts(
-                        d.products.map((p: any) => ({ id: String(p.id), name: String(p.name) })),
-                    );
-                }
-            })
-            .catch(() => {});
-        return () => {
-            alive = false;
-        };
-    }, []);
-
     useEffect(() => {
         if (!templateId) return;
         let alive = true;
@@ -168,7 +147,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     setName(t.name || "");
                     setSlug(t.slug || "");
                     setSubject(t.subject || "");
-                    setProductId(t.product_id ? String(t.product_id) : "");
                     setBgColor(t.bg_color || DEFAULT_BG_COLOR);
                     setInitialContent(Array.isArray(t.content) ? t.content : undefined);
                     setBlocks(Array.isArray(t.content) ? t.content : []);
@@ -189,14 +167,10 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
         [subject, blocks],
     );
 
-    // Gate saving: require the details (name + subject) and a non-trivial body.
+    // Gate saving: require a name + subject and a non-trivial body. Templates are
+    // attached to products via webhooks (configured on the product), not here.
     const bodyText = useMemo(() => blocksToPlainText(blocks), [blocks]);
-    // New templates must belong to a product; editing keeps the existing rules.
-    const canSave =
-        name.trim().length > 0 &&
-        subject.trim().length > 0 &&
-        bodyText.length > 2 &&
-        (Boolean(templateId) || productId.length > 0);
+    const canSave = name.trim().length > 0 && subject.trim().length > 0 && bodyText.length > 2;
 
     // Debounced true-to-inbox preview: drop the editor's email-safe HTML into the
     // real email shell (chosen canvas colour + white card) so the user sees what
@@ -235,8 +209,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 bgColor,
                 uploadedImages: uploadedImagesRef.current,
             };
-            // Templates belong to a product; required on create.
-            if (productId) payload.productId = productId;
             const url = templateId ? `/api/templates/${templateId}` : "/api/templates";
             const res = await fetch(url, {
                 method: templateId ? "PATCH" : "POST",
@@ -265,8 +237,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             </Box>
         );
     }
-
-    const noProductYet = !templateId && products.length === 0;
 
     return (
         // Full-bleed: break out of the dashboard's max-width container and fill
@@ -311,7 +281,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             </Button>
                         </span>
                     </Tooltip>
-                    <Tooltip title={canSave ? "" : "Add a product, name, subject, and some body content"} arrow disableHoverListener={canSave}>
+                    <Tooltip title={canSave ? "" : "Add a name, subject, and some body content"} arrow disableHoverListener={canSave}>
                         <span>
                             <Button
                                 onClick={save}
@@ -363,49 +333,9 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 {/* LEFT — compose (metadata header + editor + toolbar) */}
                 <GlassCard sx={{ p: 0, overflow: "hidden", display: "flex", flexDirection: "column", flex: 1, minWidth: 0, minHeight: { xs: 540, lg: 0 } }}>
                     <Box sx={{ p: 1.6, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 1.2, flexShrink: 0 }}>
-                        <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1.2fr" } }}>
+                        <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" } }}>
                             <TextField value={name} onChange={(e) => setName(e.target.value)} placeholder="Template name" fullWidth size="small" sx={darkField} />
                             <TextField value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="slug (auto)" fullWidth size="small" sx={darkField} />
-                            {noProductYet ? (
-                                <Box
-                                    component={Link}
-                                    href="/dashboard/products"
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        px: 1.5,
-                                        borderRadius: "10px",
-                                        border: "1px dashed rgba(155,123,247,0.45)",
-                                        color: ACCENT,
-                                        fontSize: "0.85rem",
-                                        fontWeight: 600,
-                                        textDecoration: "none",
-                                        whiteSpace: "nowrap",
-                                        "&:hover": { background: "rgba(155,123,247,0.06)" },
-                                    }}
-                                >
-                                    + Create a product
-                                </Box>
-                            ) : (
-                                <Select
-                                    value={productId}
-                                    onChange={(e) => setProductId(e.target.value)}
-                                    fullWidth
-                                    size="small"
-                                    displayEmpty
-                                    disabled={Boolean(templateId)}
-                                    renderValue={(val) => (val ? products.find((p) => p.id === val)?.name ?? "Unknown product" : "Select a product")}
-                                    sx={selectSx}
-                                    MenuProps={selectMenuProps}
-                                >
-                                    {products.map((p) => (
-                                        <MenuItem key={p.id} value={p.id}>
-                                            {p.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            )}
                         </Box>
                         <TextField
                             value={subject}
