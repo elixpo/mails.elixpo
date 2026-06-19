@@ -120,11 +120,23 @@ function renderFooter(footer?: EmailFooter | null): string {
     const unsub = f.unsubscribeUrl
         ? `<div style="margin-top:8px;"><a href="${esc(f.unsubscribeUrl)}" style="color:#9aa0a6;text-decoration:underline;">Unsubscribe</a></div>`
         : "";
+    const startYear = 2024;
+    const year = new Date().getFullYear();
+    const years = year > startYear ? `${startYear}–${year}` : `${startYear}`;
+    // Platform branding: Elixpo Mails logo + attribution + copyright.
+    const platform = `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8e8ee;">
+<a href="https://mails.elixpo.com" style="text-decoration:none;">
+  <img src="https://mails.elixpo.com/logo.png" alt="Elixpo Mails" height="22" style="height:22px;width:auto;opacity:0.85;display:inline-block;vertical-align:middle;">
+</a>
+<div style="margin-top:7px;color:#b6bcc4;font-size:11px;">
+  Sent with <a href="https://mails.elixpo.com" style="color:#9aa0a6;text-decoration:none;font-weight:700;">Elixpo Mails</a>
+  &nbsp;·&nbsp; © ${years} Elixpo Mails
+</div></div>`;
     return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
-<tr><td style="padding:18px 24px 8px;text-align:center;font-family:Arial,Helvetica,sans-serif;color:#9aa0a6;font-size:12px;line-height:1.6;">
+<tr><td style="padding:18px 24px 14px;text-align:center;font-family:Arial,Helvetica,sans-serif;color:#9aa0a6;font-size:12px;line-height:1.6;">
 ${brand}
 ${unsub}
-<div style="margin-top:10px;color:#b6bcc4;">Sent with Elixpo Mails</div>
+${platform}
 </td></tr>
 </table>`;
 }

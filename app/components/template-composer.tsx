@@ -113,19 +113,22 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [footer, setFooter] = useState<EmailFooter | null>(null);
     const [transactional, setTransactional] = useState(false);
+    const [editorReady, setEditorReady] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
 
-    // New templates have no product yet, so pull the default product's footer so
-    // the preview shows the configured brand block immediately. (Existing
-    // templates get their home product's footer from the template fetch below.)
+    // Show a representative brand footer in the preview: the first product that
+    // actually has footer details (logo/address/phone/quote), else the first
+    // product. (At send, the real footer comes from the triggering product.)
     useEffect(() => {
-        if (templateId) return;
         let alive = true;
         fetch("/api/products")
             .then((r) => r.json())
             .then((d: any) => {
                 if (!alive || !d?.ok || !Array.isArray(d.products) || d.products.length === 0) return;
-                const p = d.products[0];
+                const p =
+                    d.products.find(
+                        (x: any) => x.logo_url || x.address || x.phone || x.footer_note,
+                    ) || d.products[0];
                 setFooter({
                     name: p.name,
                     logoUrl: p.logo_url,
@@ -140,7 +143,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
         return () => {
             alive = false;
         };
-    }, [templateId]);
+    }, []);
 
     useEffect(() => {
         if (!templateId) return;
@@ -156,7 +159,6 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     setSubject(t.subject || "");
                     setBgColor(t.bg_color || DEFAULT_BG_COLOR);
                     setAttachments(Array.isArray(t.attachments) ? (t.attachments as Attachment[]) : []);
-                    setFooter((t.footer as EmailFooter | null) ?? null);
                     setTransactional(Boolean(t.transactional));
                     setInitialContent(Array.isArray(t.content) ? t.content : undefined);
                     setBlocks(Array.isArray(t.content) ? t.content : []);
@@ -196,7 +198,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             }
         }, 350);
         return () => clearTimeout(id);
-    }, [blocks, bgColor, showPreview, footer]);
+    }, [blocks, bgColor, showPreview, footer, editorReady]);
 
     async function save() {
         if (saving) return;
@@ -404,6 +406,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             buttonDefaults={{ color: "#7c5cff", align: "left" }}
                             onReady={(api) => {
                                 apiRef.current = api;
+                                setEditorReady(true);
                             }}
                             onChange={(ed: any) => setBlocks(ed?.document ?? [])}
                         />

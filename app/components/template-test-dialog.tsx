@@ -15,6 +15,7 @@ import {
     Link as MuiLink,
     MenuItem,
     Select,
+    Snackbar,
     Stack,
     TextField,
     Typography,
@@ -158,6 +159,7 @@ export default function TemplateTestDialog({
 
     // Send
     const [send, setSend] = useState<SendState>({ phase: "idle" });
+    const [toast, setToast] = useState<string | null>(null);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -313,8 +315,11 @@ export default function TemplateTestDialog({
             if (!res.ok || !d?.ok) throw new Error(d?.error || "Test send failed.");
             const resp = typeof d.response === "string" && d.response ? ` — ${d.response}` : "";
             setSend({ phase: "ok", text: `Sent to ${d.to}${resp}` });
+            setToast(`Successfully sent to ${d.to}`);
         } catch (e: any) {
-            setSend({ phase: "err", text: e?.message || "Test send failed." });
+            const msg = e?.message || "Test send failed.";
+            setSend({ phase: "err", text: msg });
+            setToast(`Send failed: ${msg}`);
         }
     }
 
@@ -606,6 +611,13 @@ export default function TemplateTestDialog({
                     Send test
                 </Button>
             </DialogActions>
+            <Snackbar
+                open={Boolean(toast)}
+                autoHideDuration={3500}
+                onClose={() => setToast(null)}
+                message={toast || ""}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            />
         </Dialog>
     );
 }

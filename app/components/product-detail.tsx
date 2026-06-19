@@ -535,7 +535,14 @@ function WebhooksSection({
                                             />
                                         </Stack>
                                         <Typography sx={{ color: TEXT_55, fontSize: "0.8rem", mt: 0.3 }}>
-                                            → template <strong style={{ color: "rgba(245,245,244,0.8)" }}>{wh.template_name}</strong>
+                                            → template{" "}
+                                            <Box
+                                                component={Link}
+                                                href={`/dashboard/templates/${wh.template_id}`}
+                                                sx={{ display: "inline", color: ACCENT, fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                                            >
+                                                {wh.template_name}
+                                            </Box>
                                         </Typography>
                                     </Box>
                                     <Stack direction="row" spacing={0.5} alignItems="center">
