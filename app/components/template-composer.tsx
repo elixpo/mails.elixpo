@@ -331,7 +331,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
 
                     {/* Editor body — scrolls. Extra left padding keeps BlockNote's
                         block handles (+ / drag), which sit in a left gutter, in view. */}
-                    <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: { xs: 2, md: 2.5 }, pr: { xs: 2, md: 3 }, pl: { xs: 5, md: 7 } }}>
+                    <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: { xs: 2, md: 2.5 }, pr: { xs: 2, md: 3 }, pl: { xs: 5, md: 7, lg : 8 } }}>
                         <LixEditor
                             initialContent={initialContent}
                             features={EMAIL_FEATURES}
