@@ -149,6 +149,23 @@ export async function destroyImage(cfg: CloudinaryConfig, publicId: string): Pro
     return data?.result === "ok" || data?.result === "not found";
 }
 
+/**
+ * Delete a single image by its delivery URL (e.g. a replaced/removed product
+ * logo). Only touches our own `ml_lix_` assets; no-ops when not configured.
+ */
+export async function destroyImageByUrl(url: string | null | undefined): Promise<void> {
+    if (!url) return;
+    const id = publicIdFromUrl(url);
+    if (!id || !id.includes("ml_lix_")) return;
+    const cfg = await cloudinaryConfig();
+    if (!cfg) return;
+    try {
+        await destroyImage(cfg, id);
+    } catch {
+        /* never fail the caller for a cleanup hiccup */
+    }
+}
+
 export interface CleanupOpts {
     /** HTML before the change (the previously-saved content). */
     previousHtml?: string | null;

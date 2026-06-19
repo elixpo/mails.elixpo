@@ -640,6 +640,51 @@ const dialogPaper = {
     sx: { background: SURFACE, border: `1px solid ${BORDER}`, backgroundImage: "none", borderRadius: "16px", width: "100%", maxWidth: 460 },
 } as const;
 
+/** Upload a product logo to Cloudinary (optimized) and return its URL. */
+function LogoUploader({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
+
+    async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        setUploading(true);
+        setErr(null);
+        try {
+            const form = new FormData();
+            form.append("file", file);
+            const d: any = await fetch("/api/uploads/image", { method: "POST", body: form }).then((r) => r.json());
+            if (d?.url) onChange(d.url as string);
+            else setErr(d?.message || "Upload failed");
+        } catch {
+            setErr("Upload failed");
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    return (
+        <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar src={value || undefined} variant="rounded" sx={{ width: 48, height: 48, bgcolor: "rgba(155,123,247,0.15)", color: ACCENT, border: `1px solid ${BORDER}` }}>
+                {!value && "?"}
+            </Avatar>
+            <Button onClick={() => fileRef.current?.click()} disabled={uploading} sx={{ ...GHOST_BTN, py: 0.7 }}>
+                {uploading ? <CircularProgress size={15} sx={{ color: ACCENT, mr: 1 }} /> : null}
+                {uploading ? "Uploading…" : value ? "Replace" : "Upload logo"}
+            </Button>
+            {value && (
+                <Button onClick={() => onChange("")} sx={{ textTransform: "none", color: "#f87171", fontSize: "0.84rem", "&:hover": { background: "rgba(248,113,113,0.08)" } }}>
+                    Remove
+                </Button>
+            )}
+            {err && <Typography sx={{ color: "#fca5a5", fontSize: "0.78rem" }}>{err}</Typography>}
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onChange={pick} />
+        </Stack>
+    );
+}
+
 function EditDialog({
     product,
     senders,
@@ -699,8 +744,9 @@ function EditDialog({
                         <TextField value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} fullWidth size="small" sx={darkField} placeholder="support@yourproduct.com" />
                     </Box>
                     <Box>
-                        <FieldLabel>Logo URL</FieldLabel>
-                        <TextField value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} fullWidth size="small" sx={darkField} placeholder="https://…/logo.png" />
+                        <FieldLabel>Logo</FieldLabel>
+                        <LogoUploader value={logoUrl} onChange={setLogoUrl} />
+                        <TextField value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} fullWidth size="small" sx={{ ...darkField, mt: 1 }} placeholder="…or paste an image URL" />
                     </Box>
                     <Box>
                         <FieldLabel>Default sender</FieldLabel>

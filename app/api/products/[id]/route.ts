@@ -2,6 +2,7 @@ export const runtime = "edge";
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
+import { destroyImageByUrl } from "@/lib/cloudinary";
 import {
     countProductTemplates,
     deleteProduct,
@@ -57,6 +58,12 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
         supportEmail: optStr(body?.supportEmail),
         logoUrl: optStr(body?.logoUrl),
     });
+
+    // If the logo was replaced or removed, free the old asset.
+    const newLogo = optStr(body?.logoUrl);
+    if (newLogo !== undefined && existing.logo_url && existing.logo_url !== newLogo) {
+        await destroyImageByUrl(existing.logo_url).catch(() => {});
+    }
     return NextResponse.json({ ok: true, product: product ? productToPublic(product) : null });
 }
 
@@ -81,6 +88,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
         );
     }
 
+    await destroyImageByUrl(existing.logo_url).catch(() => {});
     await deleteProduct(db, session.tenantId, id);
     return NextResponse.json({ ok: true });
 }
