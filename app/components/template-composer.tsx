@@ -126,6 +126,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     setSlug(t.slug || "");
                     setSubject(t.subject || "");
                     setBgColor(t.bg_color || DEFAULT_BG_COLOR);
+                    setAttachments(Array.isArray(t.attachments) ? (t.attachments as Attachment[]) : []);
                     setInitialContent(Array.isArray(t.content) ? t.content : undefined);
                     setBlocks(Array.isArray(t.content) ? t.content : []);
                 } else {
@@ -186,6 +187,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 contentHtml,
                 bgColor,
                 uploadedImages: uploadedImagesRef.current,
+                attachments: attachments.map((a) => ({ kind: a.kind, source: a.source, filename: a.filename, mime: a.mime })),
             };
             const url = templateId ? `/api/templates/${templateId}` : "/api/templates";
             const res = await fetch(url, {
@@ -342,6 +344,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                         />
                     </Box>
                     <ComposerToolbar getEditor={() => apiRef.current?.getEditor?.() ?? null} uploadImage={handleUpload} />
+                    <AttachmentsStrip attachments={attachments} onChange={setAttachments} onToast={setToast} />
                 </GlassCard>
 
                 {/* RIGHT — inbox preview */}
@@ -407,6 +410,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     bgColor={bgColor}
                 />
             )}
+
+            <Snackbar open={Boolean(toast)} autoHideDuration={2600} onClose={() => setToast(null)} message={toast || ""} anchorOrigin={{ vertical: "bottom", horizontal: "center" }} />
         </Box>
     );
 }

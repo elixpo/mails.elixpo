@@ -29,21 +29,33 @@ export interface RenderedEmail {
     text: string;
 }
 
+/** Brand footer appended below the content (built from the sending product). */
+export interface EmailFooter {
+    name?: string | null;
+    logoUrl?: string | null;
+    homepageUrl?: string | null;
+    supportEmail?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    quote?: string | null;
+}
+
 export function renderTemplate(
     template: RenderableTemplate,
     vars: Record<string, any> = {},
+    footer?: EmailFooter | null,
 ): RenderedEmail {
     const subject = substituteVariables(template.subject || "", vars);
     const content = substituteVariables(template.content_html || "", vars);
     return {
         subject,
-        html: wrapEmailHtml(content, template.background_color),
+        html: wrapEmailHtml(content, template.background_color, footer),
         text: htmlToText(content),
     };
 }
 
 /** Wrap rendered content in a responsive, email-client-safe HTML document. */
-export function wrapEmailHtml(content: string, bgColor?: string | null): string {
+export function wrapEmailHtml(content: string, bgColor?: string | null, footer?: EmailFooter | null): string {
     const bg = sanitizeColor(bgColor) || DEFAULT_BG_COLOR;
     return `<!doctype html>
 <html lang="en">
@@ -75,14 +87,40 @@ export function wrapEmailHtml(content: string, bgColor?: string | null): string 
 <tr><td class="e-content" style="padding:32px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:16px;line-height:1.6;">
 ${content || "<p style=\"color:#9aa0a6\">(empty)</p>"}
 </td></tr>
-<tr><td style="padding:16px 32px 28px;color:#9aa0a6;font-size:12px;text-align:center;font-family:Arial,Helvetica,sans-serif;">
-Sent with Elixpo Mails
-</td></tr>
 </table>
+${renderFooter(footer)}
 </td></tr>
 </table>
 </body>
 </html>`;
+}
+
+function esc(s: string): string {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Email-safe brand footer below the content card (muted, on the canvas). */
+function renderFooter(footer?: EmailFooter | null): string {
+    const f = footer || {};
+    const logo = f.logoUrl
+        ? `<img src="${esc(f.logoUrl)}" alt="${esc(f.name || "")}" height="28" style="height:28px;width:auto;margin:0 auto 8px;display:block;">`
+        : "";
+    const name = f.name ? `<div style="font-weight:700;color:#6b7280;margin-bottom:2px;">${esc(f.name)}</div>` : "";
+    const quote = f.quote ? `<div style="font-style:italic;color:#9aa0a6;margin-bottom:6px;">${esc(f.quote)}</div>` : "";
+    const address = f.address ? `<div>${esc(f.address)}</div>` : "";
+    const contactBits: string[] = [];
+    if (f.phone) contactBits.push(esc(f.phone));
+    if (f.supportEmail) contactBits.push(`<a href="mailto:${esc(f.supportEmail)}" style="color:#7c5cff;text-decoration:none;">${esc(f.supportEmail)}</a>`);
+    if (f.homepageUrl) contactBits.push(`<a href="${esc(f.homepageUrl)}" style="color:#7c5cff;text-decoration:none;">${esc(f.homepageUrl.replace(/^https?:\/\//, ""))}</a>`);
+    const contact = contactBits.length ? `<div style="margin-top:4px;">${contactBits.join(" &nbsp;·&nbsp; ")}</div>` : "";
+
+    const brand = logo || name || quote || address || contact;
+    return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
+<tr><td style="padding:18px 24px 8px;text-align:center;font-family:Arial,Helvetica,sans-serif;color:#9aa0a6;font-size:12px;line-height:1.6;">
+${brand}
+<div style="margin-top:10px;color:#b6bcc4;">Sent with Elixpo Mails</div>
+</td></tr>
+</table>`;
 }
 
 /**
