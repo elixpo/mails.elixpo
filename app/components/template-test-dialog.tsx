@@ -159,7 +159,7 @@ export default function TemplateTestDialog({
 
     // Send
     const [send, setSend] = useState<SendState>({ phase: "idle" });
-    const [toast, setToast] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -315,11 +315,11 @@ export default function TemplateTestDialog({
             if (!res.ok || !d?.ok) throw new Error(d?.error || "Test send failed.");
             const resp = typeof d.response === "string" && d.response ? ` — ${d.response}` : "";
             setSend({ phase: "ok", text: `Sent to ${d.to}${resp}` });
-            setToast(`Successfully sent to ${d.to}`);
+            setToast({ text: `Sent to ${d.to}${resp}`, ok: true });
         } catch (e: any) {
             const msg = e?.message || "Test send failed.";
             setSend({ phase: "err", text: msg });
-            setToast(`Send failed: ${msg}`);
+            setToast({ text: `Send failed — ${msg}`, ok: false });
         }
     }
 
@@ -613,10 +613,35 @@ export default function TemplateTestDialog({
             </DialogActions>
             <Snackbar
                 open={Boolean(toast)}
-                autoHideDuration={3500}
-                onClose={() => setToast(null)}
-                message={toast || ""}
+                autoHideDuration={toast?.ok ? 6000 : 12000}
+                onClose={(_e, reason) => reason !== "clickaway" && setToast(null)}
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                message={
+                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, maxWidth: 460 }}>
+                        <Box
+                            sx={{
+                                mt: "3px",
+                                width: 9,
+                                height: 9,
+                                borderRadius: "50%",
+                                flexShrink: 0,
+                                background: toast?.ok ? "#34d399" : "#f87171",
+                            }}
+                        />
+                        <Box
+                            sx={{
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                fontSize: "0.84rem",
+                                lineHeight: 1.5,
+                                color: toast?.ok ? "#bbf7d0" : "#fecaca",
+                            }}
+                        >
+                            {toast?.text}
+                        </Box>
+                    </Box>
+                }
+                slotProps={{ content: { sx: { maxWidth: 520, alignItems: "flex-start" } } }}
             />
         </Dialog>
     );
