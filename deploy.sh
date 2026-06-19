@@ -60,7 +60,8 @@ put_secret() {  # NAME VALUE
   local name="$1" value="${2:-}"
   [ -z "$value" ] && { echo "  Skipping (empty): $name"; return; }
   echo "  Setting: $name"
-  echo "$value" | npx wrangler pages secret put "$name" --project-name "$PROJECT" 2>&1 | tail -1
+  # printf (no trailing newline) — `echo` would append \n and corrupt the secret.
+  printf '%s' "$value" | npx wrangler pages secret put "$name" --project-name "$PROJECT" 2>&1 | tail -1
 }
 
 push_secrets() {
@@ -75,7 +76,7 @@ push_secrets() {
     skip_var "$key" && continue
     [[ -z "$value" ]] && { echo "  Skipping (empty): $key"; continue; }
     echo "  Setting: $key"
-    echo "$value" | npx wrangler pages secret put "$key" --project-name "$PROJECT" 2>&1 | tail -1
+    printf '%s' "$value" | npx wrangler pages secret put "$key" --project-name "$PROJECT" 2>&1 | tail -1
     count=$((count + 1))
   done < "$ENV_FILE"
 
@@ -91,7 +92,7 @@ push_secrets() {
   local wsec; wsec="$(envval SMTP_SENDER_SECRET)"
   if [ -n "$wsec" ]; then
     echo "=== Pushing Worker secret (SMTP_SENDER_SECRET) ==="
-    ( cd "$WORKER_DIR" && echo "$wsec" | npx wrangler secret put SMTP_SENDER_SECRET 2>&1 | tail -1 )
+    ( cd "$WORKER_DIR" && printf '%s' "$wsec" | npx wrangler secret put SMTP_SENDER_SECRET 2>&1 | tail -1 )
   fi
   echo "Done."
   echo ""

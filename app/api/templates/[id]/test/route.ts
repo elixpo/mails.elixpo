@@ -29,6 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
     }
 
+    try {
     const db = await getDatabase();
     const tmpl = await getTemplate(db, session.tenantId, id);
     if (!tmpl) return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
@@ -91,4 +92,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ ok: true, to, subject: rendered.subject, response: result.response ?? null });
     }
     return NextResponse.json({ ok: false, error: result.error || "Send failed." }, { status: 502 });
+    } catch (e: any) {
+        // Surface the real reason instead of a generic 500 (which the UI shows
+        // as "Test send failed.").
+        console.error("[templates/test] error:", e);
+        return NextResponse.json({ ok: false, error: `Send error: ${String(e?.message || e)}` }, { status: 500 });
+    }
 }
