@@ -285,5 +285,13 @@ lost — centered/right content renders left in the email (and our preview). Onl
   `paragraph`/`heading`/`quote`/list items when `props.textAlignment` is set and
   not the default `left`.
 
+### D. `getHTML()` drops the `quote` block (P1 — for 2.7.2)
+BlockNote (the peer dep) has a **`quote`** block and the editor creates it fine,
+but lixeditor's `getHTML()` has no case for it (zero `quote`/`blockquote` in the
+bundle) — so a quote renders in the editor but **vanishes from the email export
++ preview**. `renderBlock` should emit `<blockquote>${content}</blockquote>` for
+`type === "quote"` (our email CSS already styles `blockquote`). Pairs with the
+alignment fix (C).
+
 > Everything else in 2.7.0 is working. These unblock a clean compose UX on our
 > side; once published we'll bump and drop our remaining workarounds.

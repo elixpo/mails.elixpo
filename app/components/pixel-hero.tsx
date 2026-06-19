@@ -378,7 +378,9 @@ export default function PixelHero({ authed }: { authed?: boolean | null }) {
                     transitionDelay: "0.35s",
                 }}
             >
-                <Link
+                {/* Plain <a>: /api/auth/login 302-redirects cross-origin to Elixpo
+                    Accounts — a Next <Link> would RSC-prefetch it and hit CORS. */}
+                <a
                     href={primaryHref}
                     style={{
                         display: "inline-flex",
@@ -398,7 +400,7 @@ export default function PixelHero({ authed }: { authed?: boolean | null }) {
                 >
                     {primaryLabel}
                     <ArrowRight />
-                </Link>
+                </a>
                 <Link
                     href="/docs"
                     style={{

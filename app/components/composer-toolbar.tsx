@@ -41,6 +41,7 @@ export default function ComposerToolbar({
     const fileRef = useRef<HTMLInputElement>(null);
     const [linkAnchor, setLinkAnchor] = useState<HTMLElement | null>(null);
     const [linkUrl, setLinkUrl] = useState("");
+    const [linkText, setLinkText] = useState("");
     const [uploading, setUploading] = useState(false);
 
     function withEditor(fn: (ed: any) => void) {
@@ -67,12 +68,25 @@ export default function ComposerToolbar({
         });
 
     function openLink(e: React.MouseEvent<HTMLElement>) {
+        // Pre-fill the text with the current selection (if any) so linking a
+        // selection keeps its text; otherwise the typed text is inserted.
+        let selected = "";
+        try {
+            selected = getEditor()?.getSelectedText?.() || "";
+        } catch {
+            selected = "";
+        }
+        setLinkText(selected);
         setLinkUrl("");
         setLinkAnchor(e.currentTarget);
     }
     function applyLink() {
         const url = linkUrl.trim();
-        if (url) withEditor((ed) => ed.createLink(url));
+        if (!url) return;
+        // createLink(url, text): with text it inserts a link at the cursor (or
+        // replaces the selection); without text it links the current selection.
+        const text = linkText.trim();
+        withEditor((ed) => ed.createLink(url, text || undefined));
         setLinkAnchor(null);
     }
 
@@ -214,35 +228,52 @@ export default function ComposerToolbar({
                     },
                 }}
             >
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack spacing={1} sx={{ minWidth: 280 }}>
                     <TextField
                         autoFocus
                         size="small"
-                        placeholder="https://…"
-                        value={linkUrl}
-                        onChange={(e) => setLinkUrl(e.target.value)}
+                        placeholder="Link text"
+                        value={linkText}
+                        onChange={(e) => setLinkText(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") applyLink();
                         }}
                         sx={{
-                            minWidth: 240,
                             "& .MuiOutlinedInput-root": { color: "#f5f5f4", borderRadius: "8px" },
                             "& fieldset": { borderColor: "rgba(255,255,255,0.16)" },
                         }}
                     />
-                    <Button
-                        onClick={applyLink}
-                        sx={{
-                            textTransform: "none",
-                            fontWeight: 700,
-                            color: "#fff",
-                            px: 1.8,
-                            borderRadius: "8px",
-                            background: `linear-gradient(135deg, ${ACCENT} 0%, #7c5cff 100%)`,
-                        }}
-                    >
-                        Link
-                    </Button>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <TextField
+                            size="small"
+                            placeholder="https://…"
+                            value={linkUrl}
+                            onChange={(e) => setLinkUrl(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") applyLink();
+                            }}
+                            sx={{
+                                flex: 1,
+                                "& .MuiOutlinedInput-root": { color: "#f5f5f4", borderRadius: "8px" },
+                                "& fieldset": { borderColor: "rgba(255,255,255,0.16)" },
+                            }}
+                        />
+                        <Button
+                            onClick={applyLink}
+                            disabled={!linkUrl.trim()}
+                            sx={{
+                                textTransform: "none",
+                                fontWeight: 700,
+                                color: "#fff",
+                                px: 1.8,
+                                borderRadius: "8px",
+                                background: `linear-gradient(135deg, ${ACCENT} 0%, #7c5cff 100%)`,
+                                "&.Mui-disabled": { background: "rgba(255,255,255,0.08)", color: "rgba(245,245,244,0.4)" },
+                            }}
+                        >
+                            Link
+                        </Button>
+                    </Stack>
                 </Stack>
             </Popover>
         </Stack>

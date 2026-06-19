@@ -326,7 +326,7 @@ export default function TemplateTestDialog({
             open={open}
             onClose={() => send.phase !== "loading" && onClose()}
             fullWidth
-            maxWidth="md"
+            maxWidth={false}
             slotProps={{
                 paper: {
                     sx: {
@@ -334,6 +334,10 @@ export default function TemplateTestDialog({
                         border: `1px solid ${BORDER}`,
                         borderRadius: "16px",
                         backgroundImage: "none",
+                        width: "90vw",
+                        height: "90vh",
+                        maxWidth: "1400px",
+                        m: 0,
                     },
                 },
             }}
@@ -531,7 +535,7 @@ export default function TemplateTestDialog({
                                     style={{
                                         display: "block",
                                         width: "100%",
-                                        height: 360,
+                                        height: "70vh",
                                         border: "none",
                                         background: "#fff",
                                     }}
