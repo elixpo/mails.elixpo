@@ -156,9 +156,12 @@ const darkMenuProps = {
 };
 
 // ── Status visual tokens ──────────────────────────────────────────────────────
+const SLATE = "#94a3b8";
+
 function statusColor(status: string): string {
     if (status === "sent") return GREEN;
     if (status === "failed") return RED;
+    if (status === "suppressed") return SLATE;
     return AMBER; // sending / queued
 }
 
@@ -167,6 +170,7 @@ function statusLabel(status: string): string {
     if (status === "failed") return "Failed";
     if (status === "sending") return "Sending";
     if (status === "queued") return "Queued";
+    if (status === "suppressed") return "Suppressed";
     return status;
 }
 
@@ -626,6 +630,7 @@ export default function LogsManager() {
                     <MenuItem value="">All statuses</MenuItem>
                     <MenuItem value="sent">Sent</MenuItem>
                     <MenuItem value="failed">Failed</MenuItem>
+                    <MenuItem value="suppressed">Suppressed</MenuItem>
                     <MenuItem value="sending">Sending</MenuItem>
                 </Select>
 
