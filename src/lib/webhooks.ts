@@ -95,6 +95,31 @@ export async function listWebhooks(db: D1Database, tenantId: string): Promise<We
     }));
 }
 
+/** Webhooks for one product, joined with template/product names. */
+export async function listWebhooksByProduct(
+    db: D1Database,
+    tenantId: string,
+    productId: string,
+): Promise<WebhookSummary[]> {
+    const res = await db
+        .prepare(
+            `SELECT w.*, t.name AS template_name, t.slug AS template_slug, p.name AS product_name
+             FROM webhooks w
+             JOIN templates t ON t.id = w.template_id
+             JOIN products p ON p.id = w.product_id
+             WHERE w.tenant_id = ? AND w.product_id = ?
+             ORDER BY w.created_at DESC`,
+        )
+        .bind(tenantId, productId)
+        .all();
+    return ((res.results || []) as any[]).map((r) => ({
+        ...webhookToPublic(r as WebhookRow),
+        template_name: r.template_name,
+        template_slug: r.template_slug,
+        product_name: r.product_name,
+    }));
+}
+
 export async function listWebhooksByTemplate(
     db: D1Database,
     tenantId: string,

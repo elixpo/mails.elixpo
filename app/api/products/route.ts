@@ -35,12 +35,19 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    const str = (v: unknown) => (typeof v === "string" ? v : null);
     const db = await getDatabase();
     const { product, secret } = await createProduct(
         db,
         session.tenantId,
         name,
         typeof body?.defaultSenderId === "string" ? body.defaultSenderId : null,
+        {
+            description: str(body?.description),
+            homepageUrl: str(body?.homepageUrl),
+            supportEmail: str(body?.supportEmail),
+            logoUrl: str(body?.logoUrl),
+        },
     );
     // `secret` is returned exactly once — never retrievable again.
     return NextResponse.json({ ok: true, product: productToPublic(product), secret }, { status: 201 });

@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_BG_COLOR, wrapEmailHtml } from "@/lib/render";
 import { extractVariables } from "@/lib/template-vars";
 import { GHOST_BTN } from "./dashboard-ui";
-import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import { GlassCard } from "./glass-card";
 import ComposerToolbar from "./composer-toolbar";
 import LixEditor from "./lix-editor";
 import TemplateTestDialog from "./template-test-dialog";
@@ -51,31 +51,6 @@ const darkField = {
     "& .MuiInputBase-input": { fontSize: "0.92rem", py: 0.95 },
     "& .MuiInputBase-input::placeholder": { color: "rgba(245,245,244,0.35)", opacity: 1 },
 };
-
-const selectSx = {
-    color: "#f5f5f4",
-    borderRadius: "10px",
-    background: "rgba(255,255,255,0.02)",
-    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
-    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(155,123,247,0.4)" },
-    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: ACCENT },
-    "& .MuiSelect-icon": { color: "rgba(245,245,244,0.4)" },
-    "& .MuiSelect-select": { fontSize: "0.9rem", py: 1.05 },
-};
-
-const selectMenuProps = {
-    slotProps: {
-        paper: {
-            sx: {
-                background: SURFACE,
-                border: `1px solid ${BORDER}`,
-                backgroundImage: "none",
-                "& .MuiMenuItem-root": { color: "#f5f5f4", fontSize: "0.9rem" },
-                "& .MuiMenuItem-root.Mui-selected": { background: "rgba(155,123,247,0.12)" },
-            },
-        },
-    },
-} as const;
 
 const SAVE_BTN_SX = {
     textTransform: "none" as const,

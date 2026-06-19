@@ -3,7 +3,13 @@ export const runtime = "edge";
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { getSession } from "@/lib/session";
-import { createWebhook, listWebhooks, listWebhooksByTemplate, webhookToPublic } from "@/lib/webhooks";
+import {
+    createWebhook,
+    listWebhooks,
+    listWebhooksByProduct,
+    listWebhooksByTemplate,
+    webhookToPublic,
+} from "@/lib/webhooks";
 
 /**
  * GET /api/webhooks — list the tenant's webhooks (joined with template/product

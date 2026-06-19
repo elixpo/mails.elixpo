@@ -21,6 +21,10 @@ export interface ProductRow {
     secret_enc: string | null; // AES-GCM encrypted secret — recoverable for HMAC signing
     prev_secret_enc: string | null; // previous secret during rotation grace
     default_sender_id: string | null;
+    description: string | null;
+    homepage_url: string | null;
+    support_email: string | null;
+    logo_url: string | null;
     status: string;
     created_at: string;
     updated_at: string;
@@ -78,6 +82,10 @@ export interface ProductPublic {
     client_id: string;
     has_secret: boolean;
     default_sender_id: string | null;
+    description: string | null;
+    homepage_url: string | null;
+    support_email: string | null;
+    logo_url: string | null;
     status: string;
     created_at: string;
     updated_at: string;
@@ -95,6 +103,10 @@ export function productToPublic(row: ProductRow): ProductPublic {
         client_id: row.client_id,
         has_secret: Boolean(row.secret_hash),
         default_sender_id: row.default_sender_id,
+        description: row.description,
+        homepage_url: row.homepage_url,
+        support_email: row.support_email,
+        logo_url: row.logo_url,
         status: row.status,
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -123,12 +135,21 @@ async function uniqueClientId(db: D1Database, name: string): Promise<string> {
     return `${base}-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
 }
 
+/** Commercial details shown on a product's detail page. */
+export interface ProductCommercial {
+    description?: string | null;
+    homepageUrl?: string | null;
+    supportEmail?: string | null;
+    logoUrl?: string | null;
+}
+
 /** Create a product with a client_id + shared secret (returned once). */
 export async function createProduct(
     db: D1Database,
     tenantId: string,
     name: string,
     defaultSenderId?: string | null,
+    commercial?: ProductCommercial,
 ): Promise<{ product: ProductRow; secret: string }> {
     const id = newId("product");
     const clientId = await uniqueClientId(db, name);
@@ -138,9 +159,23 @@ export async function createProduct(
 
     await db
         .prepare(
-            "INSERT INTO products (id, tenant_id, name, client_id, secret_hash, secret_enc, default_sender_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            `INSERT INTO products
+                (id, tenant_id, name, client_id, secret_hash, secret_enc, default_sender_id, description, homepage_url, support_email, logo_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind(id, tenantId, name.trim() || "Untitled product", clientId, hash, enc, defaultSenderId || null)
+        .bind(
+            id,
+            tenantId,
+            name.trim() || "Untitled product",
+            clientId,
+            hash,
+            enc,
+            defaultSenderId || null,
+            commercial?.description?.trim() || null,
+            commercial?.homepageUrl?.trim() || null,
+            commercial?.supportEmail?.trim() || null,
+            commercial?.logoUrl?.trim() || null,
+        )
         .run();
 
     const product = await getProduct(db, tenantId, id);
@@ -214,6 +249,10 @@ export interface ProductUpdate {
     name?: string;
     defaultSenderId?: string | null;
     status?: string;
+    description?: string | null;
+    homepageUrl?: string | null;
+    supportEmail?: string | null;
+    logoUrl?: string | null;
 }
 
 export async function updateProduct(
@@ -235,6 +274,22 @@ export async function updateProduct(
     if (update.status !== undefined) {
         sets.push("status = ?");
         vals.push(update.status);
+    }
+    if (update.description !== undefined) {
+        sets.push("description = ?");
+        vals.push(update.description?.trim() || null);
+    }
+    if (update.homepageUrl !== undefined) {
+        sets.push("homepage_url = ?");
+        vals.push(update.homepageUrl?.trim() || null);
+    }
+    if (update.supportEmail !== undefined) {
+        sets.push("support_email = ?");
+        vals.push(update.supportEmail?.trim() || null);
+    }
+    if (update.logoUrl !== undefined) {
+        sets.push("logo_url = ?");
+        vals.push(update.logoUrl?.trim() || null);
     }
     if (sets.length === 0) return getProduct(db, tenantId, id);
     sets.push("updated_at = datetime('now')");

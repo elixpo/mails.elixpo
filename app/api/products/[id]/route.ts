@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     const existing = await getProduct(db, session.tenantId, id);
     if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+    const optStr = (v: unknown) => (v !== undefined ? (typeof v === "string" ? v : null) : undefined);
     const product = await updateProduct(db, session.tenantId, id, {
         name: typeof body?.name === "string" ? body.name : undefined,
         defaultSenderId:
@@ -51,6 +52,10 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
                     : null
                 : undefined,
         status: body?.status === "active" || body?.status === "disabled" ? body.status : undefined,
+        description: optStr(body?.description),
+        homepageUrl: optStr(body?.homepageUrl),
+        supportEmail: optStr(body?.supportEmail),
+        logoUrl: optStr(body?.logoUrl),
     });
     return NextResponse.json({ ok: true, product: product ? productToPublic(product) : null });
 }
