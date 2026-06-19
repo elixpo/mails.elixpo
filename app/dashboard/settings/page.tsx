@@ -3,6 +3,7 @@ export const runtime = "edge";
 import LockIcon from "@mui/icons-material/Lock";
 import { Box, Chip, Stack, Typography } from "@mui/material";
 import { PageHeader } from "../../components/dashboard-ui";
+import DriveConnectionCard from "../../components/drive-connection-card";
 import { GlassCard } from "../../components/glass-card";
 import WorkspaceNameForm from "../../components/workspace-name-form";
 import { getDatabase } from "@/lib/d1-client";
@@ -101,6 +102,9 @@ export default async function SettingsPage() {
                         <ReadOnlyField label="Account ID" value={session.uid} mono />
                     </Box>
                 </GlassCard>
+
+                {/* Connections — Google Drive for attachments */}
+                <DriveConnectionCard />
 
                 {/* Future preferences */}
                 <GlassCard>
