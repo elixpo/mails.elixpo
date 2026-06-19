@@ -1,13 +1,43 @@
 {
     "name": "elixpo-mail",
-    "version": "0.1.0",
+    "version": "1.1.13",
     "private": true,
-    "description": "mail.elixpo — event-based transactional email for the Elixpo ecosystem. Bring your own sender, design templates with {{variables}} in a WYSIWYG editor, and trigger sends from your service via a webhook + per-config client credentials. On Cloudflare's edge.",
-    "homepage": "https://mail.elixpo.com",
+    "description": "Elixpo Mails — multi-tenant, event-based transactional email for the Elixpo suite. Bring your own sender (SMTP / Gmail app password, AES-GCM encrypted at rest), design on-brand emails with {{variables}} in a WYSIWYG editor (live inbox preview + per-product footer), and trigger sends from your service with HMAC-signed webhooks. Google Drive / URL / per-send variable attachments, one-click List-Unsubscribe backed by a managed suppression list, and per-product delivery logs — all on Cloudflare's edge (Pages + D1 + a cloudflare:sockets SMTP Worker), with Elixpo Accounts SSO.",
+    "homepage": "https://mails.elixpo.com",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/elixpo/mail.elixpo.git"
+    },
+    "bugs": {
+        "url": "https://github.com/elixpo/mail.elixpo/issues"
+    },
+    "keywords": [
+        "transactional-email",
+        "email-api",
+        "smtp",
+        "cloudflare",
+        "cloudflare-pages",
+        "cloudflare-workers",
+        "cloudflare-d1",
+        "webhooks",
+        "hmac",
+        "email-templates",
+        "wysiwyg",
+        "list-unsubscribe",
+        "drive-attachments",
+        "elixpo"
+    ],
     "author": {
-        "name": "Elixpo",
+        "name": "Ayushman Bhattacharya",
+        "email": "ayushbhatt633@gmail.com",
         "url": "https://elixpo.com"
     },
+    "contributors": [
+        {
+            "name": "Elixpo",
+            "url": "https://elixpo.com"
+        }
+    ],
     "license": "MIT",
     "engines": {
         "node": ">=22"
