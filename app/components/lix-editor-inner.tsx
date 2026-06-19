@@ -22,6 +22,12 @@ export interface LixEditorInnerProps {
     onChange?: (editor: any) => void;
     /** Receives the imperative handle (getHTML/getBlocks/…) once mounted. */
     onReady?: (api: LixEditorHandle) => void;
+    /** Host-controlled image upload — return a hosted URL (we use Cloudinary). */
+    uploadFile?: LixEditorProps["uploadFile"];
+    /** Merge-field names suggested when typing `{{`. */
+    variableSuggestions?: LixEditorProps["variableSuggestions"];
+    /** Defaults for buttons inserted from the slash menu. */
+    buttonDefaults?: LixEditorProps["buttonDefaults"];
 }
 
 export default function LixEditorInner({
@@ -30,6 +36,9 @@ export default function LixEditorInner({
     placeholder,
     onChange,
     onReady,
+    uploadFile,
+    variableSuggestions,
+    buttonDefaults,
 }: LixEditorInnerProps) {
     const ref = useRef<LixEditorHandle>(null);
     return (
@@ -40,6 +49,9 @@ export default function LixEditorInner({
                 features={features}
                 placeholder={placeholder}
                 onChange={onChange}
+                uploadFile={uploadFile}
+                variableSuggestions={variableSuggestions}
+                buttonDefaults={buttonDefaults}
                 onReady={() => {
                     if (ref.current) onReady?.(ref.current);
                 }}

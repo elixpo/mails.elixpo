@@ -60,6 +60,19 @@ const SAVE_BTN_SX = {
     "&.Mui-disabled": { background: "rgba(255,255,255,0.06)", color: "rgba(245,245,244,0.4)" },
 };
 
+/**
+ * lixeditor `uploadFile` hook: send a dropped/pasted image to our host upload
+ * endpoint and return the optimized Cloudinary URL (never base64 in the email).
+ */
+async function uploadTemplateImage(file: File): Promise<string> {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/uploads/image", { method: "POST", body: form });
+    const d: any = await res.json().catch(() => ({}));
+    if (!res.ok || !d?.url) throw new Error(d?.message || d?.error || "Image upload failed");
+    return d.url as string;
+}
+
 export default function TemplateComposer({ templateId }: { templateId?: string }) {
     const router = useRouter();
     const [name, setName] = useState("");
@@ -252,6 +265,9 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             initialContent={initialContent}
                             features={EMAIL_FEATURES}
                             placeholder="Compose your email… type '/' for blocks, {{variables}} for dynamic values"
+                            uploadFile={uploadTemplateImage}
+                            variableSuggestions={variables}
+                            buttonDefaults={{ color: "#7c5cff", align: "left" }}
                             onReady={(api) => {
                                 apiRef.current = api;
                             }}
