@@ -9,11 +9,12 @@ import { Box, Button, Chip, CircularProgress, MenuItem, Select, Stack, TextField
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_BG_COLOR, wrapEmailHtml } from "@/lib/render";
 import { extractVariables } from "@/lib/template-vars";
 import { GHOST_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import ComposerToolbar from "./composer-toolbar";
 import LixEditor from "./lix-editor";
 import TemplateTestDialog from "./template-test-dialog";
 
@@ -88,6 +89,17 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [initialContent, setInitialContent] = useState<any[] | undefined>(undefined);
     const [blocks, setBlocks] = useState<any[]>([]);
     const apiRef = useRef<any>(null);
+    // Images uploaded during this edit session — sent on save so the server can
+    // delete any that didn't end up in the final content.
+    const uploadedImagesRef = useRef<string[]>([]);
+
+    // Single upload path for both drag/drop/paste (editor hook) and the toolbar:
+    // upload to Cloudinary and remember the URL for cleanup.
+    const handleUpload = useCallback(async (file: File) => {
+        const url = await uploadTemplateImage(file);
+        uploadedImagesRef.current.push(url);
+        return url;
+    }, []);
 
     const [loading, setLoading] = useState(Boolean(templateId));
     const [saving, setSaving] = useState(false);
@@ -196,6 +208,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 contentJson,
                 contentHtml,
                 bgColor,
+                uploadedImages: uploadedImagesRef.current,
             };
             // Templates belong to a product; required on create.
             if (productId) payload.productId = productId;
@@ -293,7 +306,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             initialContent={initialContent}
                             features={EMAIL_FEATURES}
                             placeholder="Compose your email… type '/' for blocks, {{variables}} for dynamic values"
-                            uploadFile={uploadTemplateImage}
+                            uploadFile={handleUpload}
                             variableSuggestions={variables}
                             buttonDefaults={{ color: "#7c5cff", align: "left" }}
                             onReady={(api) => {
@@ -302,6 +315,10 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             onChange={(ed: any) => setBlocks(ed?.document ?? [])}
                         />
                     </Box>
+                    <ComposerToolbar
+                        getEditor={() => apiRef.current?.getEditor?.() ?? null}
+                        uploadImage={handleUpload}
+                    />
                 </GlassCard>
 
                 {/* Inbox preview */}

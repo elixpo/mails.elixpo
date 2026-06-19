@@ -1,10 +1,17 @@
 export const runtime = "edge";
 
 import { type NextRequest, NextResponse } from "next/server";
+import { cleanupOrphanImages } from "@/lib/cloudinary";
 import { getDatabase } from "@/lib/d1-client";
 import { getOrCreateDefaultProduct, getProduct, slugify } from "@/lib/products";
 import { getSession } from "@/lib/session";
 import { createTemplate, listTemplates, toSummary } from "@/lib/templates";
+
+function sessionUrls(body: any): string[] {
+    return Array.isArray(body?.uploadedImages)
+        ? body.uploadedImages.filter((u: unknown): u is string => typeof u === "string")
+        : [];
+}
 
 /** GET /api/templates — list the tenant's templates (summaries). */
 export async function GET(request: NextRequest) {
@@ -64,6 +71,14 @@ export async function POST(request: NextRequest) {
             senderId: typeof body?.senderId === "string" ? body.senderId : null,
             bgColor: typeof body?.bgColor === "string" ? body.bgColor : null,
         });
+        // Drop any images uploaded this session that didn't make it into the
+        // saved content (upload-then-remove).
+        await cleanupOrphanImages(db, session.tenantId, {
+            previousHtml: "",
+            newHtml: row.content_html,
+            sessionUrls: sessionUrls(body),
+            keepTemplateId: row.id,
+        }).catch(() => {});
         const { toPublic } = await import("@/lib/templates");
         return NextResponse.json({ ok: true, template: toPublic(row) }, { status: 201 });
     } catch (e: any) {

@@ -1,6 +1,7 @@
 export const runtime = "edge";
 
 import { type NextRequest, NextResponse } from "next/server";
+import { cleanupOrphanImages } from "@/lib/cloudinary";
 import { getDatabase } from "@/lib/d1-client";
 import { slugify } from "@/lib/products";
 import { getSession } from "@/lib/session";
@@ -49,6 +50,19 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
             bgColor: body?.bgColor !== undefined ? (typeof body.bgColor === "string" ? body.bgColor : null) : undefined,
             status: body?.status === "active" || body?.status === "archived" ? body.status : undefined,
         });
+        // When the body changed, delete images that are no longer referenced
+        // (removed or replaced) plus any uploaded-then-removed this session.
+        if (typeof body?.contentHtml === "string") {
+            const uploaded = Array.isArray(body?.uploadedImages)
+                ? body.uploadedImages.filter((u: unknown): u is string => typeof u === "string")
+                : [];
+            await cleanupOrphanImages(db, session.tenantId, {
+                previousHtml: existing.content_html,
+                newHtml: body.contentHtml,
+                sessionUrls: uploaded,
+                keepTemplateId: id,
+            }).catch(() => {});
+        }
         return NextResponse.json({ ok: true, template: row ? toPublic(row) : null });
     } catch (e: any) {
         if (String(e?.message || "").includes("UNIQUE")) {
@@ -72,6 +86,12 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     const existing = await getTemplate(db, session.tenantId, id);
     if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+    // Free this template's images (those no other template references).
+    await cleanupOrphanImages(db, session.tenantId, {
+        previousHtml: existing.content_html,
+        newHtml: "",
+        keepTemplateId: id,
+    }).catch(() => {});
     await deleteTemplate(db, session.tenantId, id);
     return NextResponse.json({ ok: true });
 }

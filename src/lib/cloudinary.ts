@@ -9,6 +9,7 @@
  * from the mail service. Edge-safe (Web Crypto, FormData, fetch).
  */
 
+import type { D1Database } from "@cloudflare/workers-types";
 import { toHex } from "./crypto";
 import { getEnv } from "./env";
 
@@ -91,4 +92,113 @@ export async function uploadImage(
         bytes: Number(data.bytes) || 0,
         format: data.format,
     };
+}
+
+// ─── Orphan cleanup (delete unreferenced images to keep storage tight) ───────
+
+const CLOUDINARY_URL_RE = /https?:\/\/res\.cloudinary\.com\/[^\s"'()<>]+/g;
+
+/**
+ * Recover the Cloudinary public_id from a delivery URL, stripping the
+ * transformation segment, version, and file extension. Returns null for
+ * non-Cloudinary URLs.
+ */
+export function publicIdFromUrl(url: string): string | null {
+    const m = url.match(/res\.cloudinary\.com\/[^/]+\/image\/upload\/(.+)$/);
+    if (!m) return null;
+    const path = m[1].split(/[?#]/)[0];
+    const segs = path.split("/");
+    // Drop leading transformation (has a comma or looks like key_value) and
+    // version (vNNN) segments until we reach the real folder path.
+    while (segs.length > 1) {
+        const s = segs[0];
+        if (/^v\d+$/.test(s) || s.includes(",") || /^[a-z]+_[^/]+$/.test(s)) segs.shift();
+        else break;
+    }
+    const id = segs.join("/").replace(/\.[A-Za-z0-9]+$/, "");
+    return id || null;
+}
+
+/** Public_ids of OUR uploaded images (ml_lix_ prefix) referenced in some HTML. */
+export function extractCloudinaryPublicIds(html: string | null | undefined): string[] {
+    if (!html) return [];
+    const ids = new Set<string>();
+    for (const url of html.match(CLOUDINARY_URL_RE) || []) {
+        const id = publicIdFromUrl(url);
+        // Only ever consider assets we created — never a foreign Cloudinary URL
+        // a user may have embedded.
+        if (id && id.includes("ml_lix_")) ids.add(id);
+    }
+    return [...ids];
+}
+
+/** Delete one asset from Cloudinary (signed). Treats "not found" as success. */
+export async function destroyImage(cfg: CloudinaryConfig, publicId: string): Promise<boolean> {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = await sha1Hex(`public_id=${publicId}&timestamp=${timestamp}${cfg.apiSecret}`);
+    const form = new FormData();
+    form.append("public_id", publicId);
+    form.append("timestamp", String(timestamp));
+    form.append("api_key", cfg.apiKey);
+    form.append("signature", signature);
+    const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cfg.cloudName}/image/destroy`,
+        { method: "POST", body: form },
+    );
+    const data = (await res.json().catch(() => ({}))) as any;
+    return data?.result === "ok" || data?.result === "not found";
+}
+
+export interface CleanupOpts {
+    /** HTML before the change (the previously-saved content). */
+    previousHtml?: string | null;
+    /** HTML after the change (what we just saved). */
+    newHtml?: string | null;
+    /** URLs uploaded during this edit session (catches upload-then-remove). */
+    sessionUrls?: string[];
+    /** Template being saved/deleted — excluded from the "referenced elsewhere" guard. */
+    keepTemplateId?: string | null;
+}
+
+/**
+ * Delete images that were referenced before (or uploaded this session) but are
+ * NOT in the new content — unless another template still references them. Safe
+ * to call on every save/delete; no-ops when Cloudinary isn't configured.
+ * Returns the number of assets deleted.
+ */
+export async function cleanupOrphanImages(
+    db: D1Database,
+    tenantId: string,
+    opts: CleanupOpts,
+): Promise<number> {
+    const cfg = await cloudinaryConfig();
+    if (!cfg) return 0;
+
+    const candidates = new Set<string>(extractCloudinaryPublicIds(opts.previousHtml));
+    for (const url of opts.sessionUrls || []) {
+        const id = publicIdFromUrl(url);
+        if (id && id.includes("ml_lix_")) candidates.add(id);
+    }
+    const keep = new Set(extractCloudinaryPublicIds(opts.newHtml));
+    const removed = [...candidates].filter((id) => !keep.has(id));
+    if (removed.length === 0) return 0;
+
+    let deleted = 0;
+    for (const id of removed) {
+        // Never delete an asset another of the tenant's templates still uses.
+        const sql = opts.keepTemplateId
+            ? "SELECT 1 FROM templates WHERE tenant_id = ? AND id != ? AND content_html LIKE ? LIMIT 1"
+            : "SELECT 1 FROM templates WHERE tenant_id = ? AND content_html LIKE ? LIMIT 1";
+        const binds = opts.keepTemplateId
+            ? [tenantId, opts.keepTemplateId, `%${id}%`]
+            : [tenantId, `%${id}%`];
+        const ref = await db.prepare(sql).bind(...binds).first();
+        if (ref) continue;
+        try {
+            if (await destroyImage(cfg, id)) deleted++;
+        } catch {
+            /* a Cloudinary hiccup must never fail the save */
+        }
+    }
+    return deleted;
 }
