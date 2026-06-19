@@ -22,6 +22,7 @@ export interface TemplateRow {
     variables_json: string | null;
     sender_id: string | null;
     bg_color: string | null;
+    transactional: number;
     status: string;
     created_at: string;
     updated_at: string;
