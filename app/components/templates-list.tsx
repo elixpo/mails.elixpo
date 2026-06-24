@@ -172,7 +172,44 @@ export default function TemplatesList() {
 
     return (
         <Box>
-            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+            <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ sm: "center" }}
+                justifyContent="flex-end"
+                sx={{ mb: 2 }}
+            >
+                {templates.length > 0 && (
+                    <>
+                        <TextField
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search templates…"
+                            size="small"
+                            sx={{ ...darkField, flex: 1, width: { xs: "100%", sm: "auto" } }}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon sx={{ fontSize: 18, color: TEXT_40 }} />
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
+                        />
+                        <Select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value as SortKey)}
+                            size="small"
+                            sx={darkSelect}
+                            MenuProps={darkMenuProps}
+                        >
+                            <MenuItem value="recent">Recently updated</MenuItem>
+                            <MenuItem value="oldest">Oldest first</MenuItem>
+                            <MenuItem value="name">Name (A–Z)</MenuItem>
+                        </Select>
+                    </>
+                )}
                 <Button component={Link} href="/dashboard/templates/new" startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />} sx={NEW_BTN}>
                     New template
                 </Button>
@@ -195,9 +232,13 @@ export default function TemplatesList() {
                         </Button>
                     }
                 />
+            ) : visible.length === 0 ? (
+                <Typography sx={{ fontSize: "0.88rem", color: TEXT_60, textAlign: "center", py: 4 }}>
+                    No templates match &ldquo;{query.trim()}&rdquo;
+                </Typography>
             ) : (
                 <Stack spacing={1.5}>
-                    {templates.map((t) => (
+                    {visible.map((t) => (
                         <GlassCard key={t.id} sx={{ p: 0 }}>
                             <Stack direction="row" alignItems="center" sx={{ p: 2, gap: 2 }}>
                                 <Box
