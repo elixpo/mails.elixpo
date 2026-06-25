@@ -109,7 +109,7 @@ function ReadOnlyChip() {
 }
 
 function relativeTime(iso: string): string {
-    const t = Date.parse(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
+    const t = Date.parse(iso.includes("T") ? iso : `${iso.replace(" ", "T")}Z`);
     if (Number.isNaN(t)) return "";
     const s = Math.floor((Date.now() - t) / 1000);
     if (s < 60) return "just now";
@@ -139,7 +139,7 @@ export default function TemplatesList() {
               )
             : list;
         const ts = (iso: string) =>
-            Date.parse(iso?.includes("T") ? iso : `${iso}`.replace(" ", "T") + "Z") || 0;
+            Date.parse(iso?.includes("T") ? iso : `${`${iso}`.replace(" ", "T")}Z`) || 0;
         return [...filtered].sort((a, b) => {
             if (sort === "name") return a.name.localeCompare(b.name);
             if (sort === "oldest") return ts(a.updated_at) - ts(b.updated_at);

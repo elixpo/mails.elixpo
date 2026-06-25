@@ -1044,7 +1044,7 @@ function SuppressionsSection({
             <Stack direction="row" spacing={1} alignItems="center">
                 <UnsubscribeIcon sx={{ fontSize: 19, color: ACCENT }} />
                 <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: TEXT }}>
-                    Suppressions{items && items.length ? ` (${items.length})` : ""}
+                    Suppressions{items?.length ? ` (${items.length})` : ""}
                 </Typography>
             </Stack>
             <Typography sx={{ color: TEXT_55, fontSize: "0.85rem", mt: 0.4, mb: 1.8 }}>
@@ -1795,7 +1795,7 @@ function SecretRevealDialog({
 
 function fmtDate(s: string): string {
     try {
-        return new Date(s.replace(" ", "T") + "Z").toLocaleDateString(undefined, {
+        return new Date(`${s.replace(" ", "T")}Z`).toLocaleDateString(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric",

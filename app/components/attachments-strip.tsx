@@ -124,7 +124,7 @@ export default function AttachmentsStrip({
     }
 
     return (
-        <Box sx={{ px: 1.5, py: 1, borderTop: `1px solid rgba(255,255,255,0.07)` }}>
+        <Box sx={{ px: 1.5, py: 1, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
             <Stack direction="row" alignItems="center" sx={{ flexWrap: "wrap", gap: 0.8 }}>
                 {canWrite && (
                     <Button

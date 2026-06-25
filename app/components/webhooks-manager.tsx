@@ -254,26 +254,26 @@ function buildSnippet(origin: string, endpointKey: string, variables: string[]):
     const dollar = "$";
     return [
         `import crypto from "node:crypto";`,
-        ``,
+        "",
         `const secret = "YOUR_PRODUCT_SECRET"; // your product's shared secret`,
         `const url = "${url}";`,
-        ``,
-        `const payload = JSON.stringify({`,
+        "",
+        "const payload = JSON.stringify({",
         `  to: "user@example.com",`,
         `  variables: ${varsObj},`,
-        `});`,
-        ``,
-        `const t = Math.floor(Date.now() / 1000);`,
+        "});",
+        "",
+        "const t = Math.floor(Date.now() / 1000);",
         `const v1 = crypto.createHmac("sha256", secret).update(\`${dollar}{t}.${dollar}{payload}\`).digest("hex");`,
-        ``,
-        `const res = await fetch(url, {`,
+        "",
+        "const res = await fetch(url, {",
         `  method: "POST",`,
-        `  headers: {`,
+        "  headers: {",
         `    "Content-Type": "application/json",`,
         `    "X-Elixpo-Signature": \`t=${dollar}{t},v1=${dollar}{v1}\`,`,
-        `  },`,
-        `  body: payload,`,
-        `});`,
+        "  },",
+        "  body: payload,",
+        "});",
     ].join("\n");
 }
 
@@ -1256,7 +1256,7 @@ export default function WebhooksManager() {
     // webhook, so the most recently created webhook is always first.
     const groups = useMemo(() => {
         const ts = (iso: string) =>
-            Date.parse(iso?.includes("T") ? iso : `${iso}`.replace(" ", "T") + "Z") || 0;
+            Date.parse(iso?.includes("T") ? iso : `${`${iso}`.replace(" ", "T")}Z`) || 0;
         const byTemplate = new Map<
             string,
             {
@@ -1275,7 +1275,7 @@ export default function WebhooksManager() {
                     items: [],
                 });
             }
-            byTemplate.get(w.template_id)!.items.push(w);
+            byTemplate.get(w.template_id)?.items.push(w);
         }
         const out = Array.from(byTemplate.values());
         for (const g of out) g.items.sort((a, b) => ts(b.created_at) - ts(a.created_at));

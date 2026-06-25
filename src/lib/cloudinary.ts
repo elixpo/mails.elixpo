@@ -127,7 +127,7 @@ export function extractCloudinaryPublicIds(html: string | null | undefined): str
         const id = publicIdFromUrl(url);
         // Only ever consider assets we created — never a foreign Cloudinary URL
         // a user may have embedded.
-        if (id && id.includes("ml_lix_")) ids.add(id);
+        if (id?.includes("ml_lix_")) ids.add(id);
     }
     return [...ids];
 }
@@ -194,7 +194,7 @@ export async function cleanupOrphanImages(
     const candidates = new Set<string>(extractCloudinaryPublicIds(opts.previousHtml));
     for (const url of opts.sessionUrls || []) {
         const id = publicIdFromUrl(url);
-        if (id && id.includes("ml_lix_")) candidates.add(id);
+        if (id?.includes("ml_lix_")) candidates.add(id);
     }
     const keep = new Set(extractCloudinaryPublicIds(opts.newHtml));
     const removed = [...candidates].filter((id) => !keep.has(id));

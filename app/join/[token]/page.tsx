@@ -36,7 +36,7 @@ export default async function JoinInvitePage({
 
     const role = invite?.role ?? null;
     const isOpenLink = invite ? invite.email === null : false;
-    const loginHref = `/login?next=${encodeURIComponent("/join/" + token)}`;
+    const loginHref = `/login?next=${encodeURIComponent(`/join/${token}`)}`;
 
     return (
         <Box

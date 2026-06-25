@@ -53,7 +53,7 @@ function LoginInner() {
             .then((r) => (r.ok ? r.json() : null))
             .then((d: any) => {
                 if (cancelled) return;
-                if (d && d.authenticated) window.location.replace("/dashboard");
+                if (d?.authenticated) window.location.replace("/dashboard");
                 else setChecking(false);
             })
             .catch(() => {

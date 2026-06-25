@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     if (!data)
         return page(
             "Invalid link",
-            `<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been tampered with.</p>`,
+            "<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been tampered with.</p>",
             400,
         );
 
@@ -52,7 +52,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ to
     if (!data)
         return page(
             "Invalid link",
-            `<h1>Link not valid</h1><p>This unsubscribe link is invalid.</p>`,
+            "<h1>Link not valid</h1><p>This unsubscribe link is invalid.</p>",
             400,
         );
 

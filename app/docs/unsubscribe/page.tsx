@@ -32,7 +32,7 @@ export default function Unsubscribe() {
                         <Code>List-Unsubscribe</Code> and one-click{" "}
                         <Code>List-Unsubscribe-Post</Code> headers.
                     </>,
-                    <>When a recipient unsubscribes, they're added to the suppression list.</>,
+                    "When a recipient unsubscribes, they're added to the suppression list.",
                     <>
                         Future non-transactional sends to a suppressed recipient are{" "}
                         <strong>skipped</strong>, the delivery is logged as <Code>suppressed</Code>,

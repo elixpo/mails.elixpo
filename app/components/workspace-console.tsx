@@ -158,7 +158,7 @@ const ghostButtonSx = {
     px: 1.6,
     py: 0.7,
     borderRadius: "8px",
-    border: `1px solid rgba(255,255,255,0.12)`,
+    border: "1px solid rgba(255,255,255,0.12)",
     background: "rgba(255,255,255,0.02)",
     "&:hover": { background: "rgba(255,255,255,0.06)", borderColor: "rgba(155,123,247,0.4)" },
 } as const;

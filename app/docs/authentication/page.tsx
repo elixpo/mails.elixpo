@@ -15,7 +15,7 @@ import {
     NextLink,
 } from "../_components/docs-prose";
 
-const HEADER = `X-Elixpo-Signature: t=1718500000,v1=9f8a...e21c`;
+const HEADER = "X-Elixpo-Signature: t=1718500000,v1=9f8a...e21c";
 
 const SIGN = `import crypto from "node:crypto";
 
