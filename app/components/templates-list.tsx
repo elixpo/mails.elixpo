@@ -22,6 +22,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "./dashboard-ui";
 import { BORDER, SURFACE } from "./glass-card";
 import { GlassCard } from "./glass-card";
+import { useRole } from "./role-provider";
 
 const ACCENT = "#9b7bf7";
 const TEXT_60 = "rgba(245,245,244,0.6)";
@@ -93,6 +94,20 @@ const NEW_BTN = {
     "&:hover": { background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)" },
 };
 
+function ReadOnlyChip() {
+    return (
+        <Chip
+            label="Read-only access"
+            size="small"
+            sx={{
+                color: "rgba(245,245,244,0.5)",
+                bgcolor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.07)",
+            }}
+        />
+    );
+}
+
 function relativeTime(iso: string): string {
     const t = Date.parse(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
     if (Number.isNaN(t)) return "";
@@ -104,6 +119,7 @@ function relativeTime(iso: string): string {
 }
 
 export default function TemplatesList() {
+    const { canWrite } = useRole();
     const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
@@ -210,14 +226,18 @@ export default function TemplatesList() {
                         </Select>
                     </>
                 )}
-                <Button
-                    component={Link}
-                    href="/dashboard/templates/new"
-                    startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                    sx={NEW_BTN}
-                >
-                    New template
-                </Button>
+                {canWrite ? (
+                    <Button
+                        component={Link}
+                        href="/dashboard/templates/new"
+                        startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                        sx={NEW_BTN}
+                    >
+                        New template
+                    </Button>
+                ) : (
+                    <ReadOnlyChip />
+                )}
             </Stack>
 
             {error && (
@@ -243,14 +263,18 @@ export default function TemplatesList() {
                     headline="No templates yet"
                     subtext="Design your first email in the visual editor — add {{variables}} for the parts that change per recipient."
                     cta={
-                        <Button
-                            component={Link}
-                            href="/dashboard/templates/new"
-                            startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={NEW_BTN}
-                        >
-                            Create a template
-                        </Button>
+                        canWrite ? (
+                            <Button
+                                component={Link}
+                                href="/dashboard/templates/new"
+                                startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                                sx={NEW_BTN}
+                            >
+                                Create a template
+                            </Button>
+                        ) : (
+                            <ReadOnlyChip />
+                        )
                     }
                 />
             ) : visible.length === 0 ? (
@@ -369,29 +393,31 @@ export default function TemplatesList() {
                                     >
                                         Edit
                                     </Button>
-                                    <Button
-                                        onClick={() => remove(t.id)}
-                                        disabled={deleting === t.id}
-                                        sx={{
-                                            minWidth: 0,
-                                            p: 1,
-                                            color: "rgba(245,245,244,0.5)",
-                                            borderRadius: "9px",
-                                            "&:hover": {
-                                                background: "rgba(239,68,68,0.1)",
-                                                color: "#fca5a5",
-                                            },
-                                        }}
-                                    >
-                                        {deleting === t.id ? (
-                                            <CircularProgress
-                                                size={16}
-                                                sx={{ color: "rgba(245,245,244,0.5)" }}
-                                            />
-                                        ) : (
-                                            <DeleteOutlineIcon sx={{ fontSize: 19 }} />
-                                        )}
-                                    </Button>
+                                    {canWrite && (
+                                        <Button
+                                            onClick={() => remove(t.id)}
+                                            disabled={deleting === t.id}
+                                            sx={{
+                                                minWidth: 0,
+                                                p: 1,
+                                                color: "rgba(245,245,244,0.5)",
+                                                borderRadius: "9px",
+                                                "&:hover": {
+                                                    background: "rgba(239,68,68,0.1)",
+                                                    color: "#fca5a5",
+                                                },
+                                            }}
+                                        >
+                                            {deleting === t.id ? (
+                                                <CircularProgress
+                                                    size={16}
+                                                    sx={{ color: "rgba(245,245,244,0.5)" }}
+                                                />
+                                            ) : (
+                                                <DeleteOutlineIcon sx={{ fontSize: 19 }} />
+                                            )}
+                                        </Button>
+                                    )}
                                 </Stack>
                             </Stack>
                         </GlassCard>

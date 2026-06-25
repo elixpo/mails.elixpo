@@ -27,6 +27,7 @@ import AttachmentsStrip, { type Attachment } from "./attachments-strip";
 import ComposerToolbar from "./composer-toolbar";
 import { GHOST_BTN } from "./dashboard-ui";
 import { GlassCard } from "./glass-card";
+import { useRole } from "./role-provider";
 import LixEditor from "./lix-editor";
 import TemplateSendDialog from "./template-send-dialog";
 import TemplateTestDialog from "./template-test-dialog";
@@ -93,6 +94,7 @@ async function uploadTemplateImage(file: File): Promise<string> {
 }
 
 export default function TemplateComposer({ templateId }: { templateId?: string }) {
+    const { canWrite } = useRole();
     const router = useRouter();
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
@@ -344,6 +346,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             Saved
                         </Typography>
                     )}
+                    {canWrite && (
+                    <>
                     <Tooltip
                         title={templateId ? "" : "Save the template first"}
                         arrow
@@ -415,6 +419,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             </Button>
                         </span>
                     </Tooltip>
+                    </>
+                    )}
                 </Stack>
             </Stack>
 

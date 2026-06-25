@@ -42,6 +42,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { EmptyState, GHOST_BTN, PRIMARY_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import { useRole } from "./role-provider";
 
 // ── Palette ─────────────────────────────────────────────────────────────────
 const ACCENT = "#9b7bf7";
@@ -144,6 +145,21 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 function FieldHelp({ children }: { children: React.ReactNode }) {
     return (
         <Typography sx={{ fontSize: "0.74rem", color: TEXT_40, mt: 0.6 }}>{children}</Typography>
+    );
+}
+
+// ── Read-only access chip (shown to viewers where a write button would be) ───
+function ReadOnlyChip() {
+    return (
+        <Chip
+            label="Read-only access"
+            size="small"
+            sx={{
+                color: "rgba(245,245,244,0.5)",
+                bgcolor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.07)",
+            }}
+        />
     );
 }
 
@@ -735,6 +751,7 @@ function AliasesSection({
     const [formError, setFormError] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { canWrite } = useRole();
 
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail.trim());
     const canSubmit = !saving && emailValid;
@@ -893,7 +910,8 @@ function AliasesSection({
                                             </Typography>
                                         </Box>
 
-                                        {confirmId === a.id ? (
+                                        {canWrite &&
+                                            (confirmId === a.id ? (
                                             <Stack
                                                 direction="row"
                                                 spacing={0.5}
@@ -967,13 +985,14 @@ function AliasesSection({
                                                     <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
                                             </Tooltip>
-                                        )}
+                                            ))}
                                     </Stack>
                                 ))}
                             </Stack>
                         )}
 
                         {/* Add alias inline form */}
+                        {canWrite && (
                         <Box
                             sx={{
                                 display: "grid",
@@ -1039,6 +1058,7 @@ function AliasesSection({
                                 )}
                             </Button>
                         </Box>
+                        )}
 
                         {formError && (
                             <Stack
@@ -1084,6 +1104,7 @@ function SenderCard({
     onSetDefault: () => Promise<void>;
     onTested: () => void;
 }) {
+    const { canWrite } = useRole();
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [test, setTest] = useState<TestState>(null);
     const [defaultError, setDefaultError] = useState<string | null>(null);
@@ -1232,8 +1253,9 @@ function SenderCard({
 
                 {/* Action row */}
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
+                    {!canWrite && <ReadOnlyChip />}
                     {/* Send-as selector — only when the sender has at least one alias. */}
-                    {hasAliases && (
+                    {canWrite && hasAliases && (
                         <Tooltip title="Send the test as this identity" arrow>
                             <Select
                                 value={sendAsId}
@@ -1306,6 +1328,8 @@ function SenderCard({
                         </Tooltip>
                     )}
 
+                    {canWrite && (
+                    <>
                     <Tooltip title={`Sends a verification email to ${sender.email}`} arrow>
                         <span>
                             <Button
@@ -1425,6 +1449,8 @@ function SenderCard({
                             Delete
                         </MenuItem>
                     </Menu>
+                    </>
+                    )}
                 </Stack>
             </Stack>
 
@@ -1499,6 +1525,7 @@ function SenderCard({
 
 // ── Manager (root) ──────────────────────────────────────────────────────────
 export default function SendersManager() {
+    const { canWrite } = useRole();
     const [senders, setSenders] = useState<Sender[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -1615,26 +1642,32 @@ export default function SendersManager() {
                     headline="No senders yet"
                     subtext="A sender is your own mailbox — the email and app password we relay your mail through, so it sends on your domain and reputation. Connect one to start delivering."
                     cta={
-                        <Button
-                            onClick={openCreate}
-                            startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={PRIMARY_BTN}
-                        >
-                            Connect a sender
-                        </Button>
+                        canWrite ? (
+                            <Button
+                                onClick={openCreate}
+                                startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                                sx={PRIMARY_BTN}
+                            >
+                                Connect a sender
+                            </Button>
+                        ) : (
+                            <ReadOnlyChip />
+                        )
                     }
                 />
             ) : (
                 <Box>
-                    <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-                        <Button
-                            onClick={openCreate}
-                            startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={PRIMARY_BTN}
-                        >
-                            Connect a sender
-                        </Button>
-                    </Stack>
+                    {canWrite && (
+                        <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <Button
+                                onClick={openCreate}
+                                startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                                sx={PRIMARY_BTN}
+                            >
+                                Connect a sender
+                            </Button>
+                        </Stack>
+                    )}
                     <Stack spacing={2}>
                         {senders.map((s) => (
                             <SenderCard

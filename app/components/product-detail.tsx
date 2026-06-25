@@ -39,6 +39,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, GHOST_BTN, PRIMARY_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import { useRole } from "./role-provider";
 
 const ACCENT = "#9b7bf7";
 const TEXT = "#f5f5f4";
@@ -173,6 +174,7 @@ function buildSnippet(origin: string, key: string, vars: string[]): string {
 }
 
 export default function ProductDetail({ id }: { id: string }) {
+    const { canWrite } = useRole();
     const router = useRouter();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
@@ -409,13 +411,15 @@ export default function ProductDetail({ id }: { id: string }) {
                             </Stack>
                         </Box>
                     </Stack>
-                    <Button
-                        onClick={() => setEditOpen(true)}
-                        startIcon={<EditIcon sx={{ fontSize: "1.05rem !important" }} />}
-                        sx={{ ...GHOST_BTN, flexShrink: 0 }}
-                    >
-                        Edit details
-                    </Button>
+                    {canWrite && (
+                        <Button
+                            onClick={() => setEditOpen(true)}
+                            startIcon={<EditIcon sx={{ fontSize: "1.05rem !important" }} />}
+                            sx={{ ...GHOST_BTN, flexShrink: 0 }}
+                        >
+                            Edit details
+                        </Button>
+                    )}
                 </Stack>
             </GlassCard>
 
@@ -442,18 +446,22 @@ export default function ProductDetail({ id }: { id: string }) {
                             onCopy={() => copy(product.client_id, "Client ID copied")}
                         />
                     </Box>
-                    <Box>
-                        <FieldLabel>Shared secret</FieldLabel>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Button
-                                onClick={rotateSecret}
-                                startIcon={<AutorenewIcon sx={{ fontSize: "1rem !important" }} />}
-                                sx={{ ...GHOST_BTN, py: 0.7 }}
-                            >
-                                Rotate
-                            </Button>
-                        </Stack>
-                    </Box>
+                    {canWrite && (
+                        <Box>
+                            <FieldLabel>Shared secret</FieldLabel>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Button
+                                    onClick={rotateSecret}
+                                    startIcon={
+                                        <AutorenewIcon sx={{ fontSize: "1rem !important" }} />
+                                    }
+                                    sx={{ ...GHOST_BTN, py: 0.7 }}
+                                >
+                                    Rotate
+                                </Button>
+                            </Stack>
+                        </Box>
+                    )}
                 </Box>
                 <Stack direction="row" spacing={3} sx={{ mt: 2 }}>
                     <Meta
@@ -611,6 +619,7 @@ function WebhooksSection({
     onCopy: (text: string, label?: string) => void;
     onToast: (m: string) => void;
 }) {
+    const { canWrite } = useRole();
     const [createOpen, setCreateOpen] = useState(false);
     const [menuFor, setMenuFor] = useState<{ el: HTMLElement; wh: Webhook } | null>(null);
     const [renaming, setRenaming] = useState<Webhook | null>(null);
@@ -649,14 +658,16 @@ function WebhooksSection({
                         trigger to send it.
                     </Typography>
                 </Box>
-                <Button
-                    onClick={() => setCreateOpen(true)}
-                    disabled={templates.length === 0}
-                    startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                    sx={{ ...PRIMARY_BTN, flexShrink: 0 }}
-                >
-                    New webhook
-                </Button>
+                {canWrite && (
+                    <Button
+                        onClick={() => setCreateOpen(true)}
+                        disabled={templates.length === 0}
+                        startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                        sx={{ ...PRIMARY_BTN, flexShrink: 0 }}
+                    >
+                        New webhook
+                    </Button>
+                )}
             </Stack>
 
             {webhooks.length === 0 ? (
@@ -771,13 +782,17 @@ function WebhooksSection({
                                         >
                                             {open ? "Hide" : "Usage"}
                                         </Button>
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => setMenuFor({ el: e.currentTarget, wh })}
-                                            sx={{ color: TEXT_55, "&:hover": { color: TEXT } }}
-                                        >
-                                            <MoreVertIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
+                                        {canWrite && (
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) =>
+                                                    setMenuFor({ el: e.currentTarget, wh })
+                                                }
+                                                sx={{ color: TEXT_55, "&:hover": { color: TEXT } }}
+                                            >
+                                                <MoreVertIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        )}
                                     </Stack>
                                 </Stack>
 
@@ -977,6 +992,7 @@ function SuppressionsSection({
     productId,
     onToast,
 }: { productId: string; onToast: (m: string) => void }) {
+    const { canWrite } = useRole();
     const [items, setItems] = useState<Suppression[] | null>(null);
     const [email, setEmail] = useState("");
     const [busy, setBusy] = useState(false);
@@ -1036,23 +1052,25 @@ function SuppressionsSection({
                 send.
             </Typography>
 
-            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <TextField
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && add()}
-                    placeholder="name@example.com"
-                    size="small"
-                    sx={{ ...darkField, flex: 1, maxWidth: 360 }}
-                />
-                <Button
-                    onClick={add}
-                    disabled={!email.trim() || busy}
-                    sx={{ ...GHOST_BTN, py: 0.7 }}
-                >
-                    Suppress
-                </Button>
-            </Stack>
+            {canWrite && (
+                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                    <TextField
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && add()}
+                        placeholder="name@example.com"
+                        size="small"
+                        sx={{ ...darkField, flex: 1, maxWidth: 360 }}
+                    />
+                    <Button
+                        onClick={add}
+                        disabled={!email.trim() || busy}
+                        sx={{ ...GHOST_BTN, py: 0.7 }}
+                    >
+                        Suppress
+                    </Button>
+                </Stack>
+            )}
 
             {items === null ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
@@ -1111,17 +1129,19 @@ function SuppressionsSection({
                                     {fmtDate(s.created_at)}
                                 </Typography>
                             </Stack>
-                            <Button
-                                onClick={() => remove(s.email)}
-                                sx={{
-                                    textTransform: "none",
-                                    fontSize: "0.8rem",
-                                    color: ACCENT,
-                                    "&:hover": { background: "rgba(155,123,247,0.08)" },
-                                }}
-                            >
-                                Re-subscribe
-                            </Button>
+                            {canWrite && (
+                                <Button
+                                    onClick={() => remove(s.email)}
+                                    sx={{
+                                        textTransform: "none",
+                                        fontSize: "0.8rem",
+                                        color: ACCENT,
+                                        "&:hover": { background: "rgba(155,123,247,0.08)" },
+                                    }}
+                                >
+                                    Re-subscribe
+                                </Button>
+                            )}
                         </Stack>
                     ))}
                 </Stack>

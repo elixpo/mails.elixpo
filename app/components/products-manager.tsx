@@ -35,6 +35,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { EmptyState, GHOST_BTN, PRIMARY_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import { useRole } from "./role-provider";
 
 // ── Palette ─────────────────────────────────────────────────────────────────
 const ACCENT = "#9b7bf7";
@@ -166,6 +167,21 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
         >
             {children}
         </Typography>
+    );
+}
+
+// ── Read-only access chip (shown to viewers where a write button would be) ───
+function ReadOnlyChip() {
+    return (
+        <Chip
+            label="Read-only access"
+            size="small"
+            sx={{
+                color: "rgba(245,245,244,0.5)",
+                bgcolor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.07)",
+            }}
+        />
     );
 }
 
@@ -997,6 +1013,7 @@ function ProductCard({
     onRotate: () => void;
     onDelete: () => void;
 }) {
+    const { canWrite } = useRole();
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
     return (
@@ -1077,6 +1094,9 @@ function ProductCard({
 
                 {/* Action row */}
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
+                    {!canWrite && <ReadOnlyChip />}
+                    {canWrite && (
+                    <>
                     <Button
                         onClick={onEdit}
                         startIcon={<EditOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
@@ -1144,6 +1164,8 @@ function ProductCard({
                             Delete
                         </MenuItem>
                     </Menu>
+                    </>
+                    )}
                 </Stack>
             </Stack>
         </GlassCard>
@@ -1152,6 +1174,7 @@ function ProductCard({
 
 // ── Manager (root) ──────────────────────────────────────────────────────────
 export default function ProductsManager() {
+    const { canWrite } = useRole();
     const [products, setProducts] = useState<ProductSummary[]>([]);
     const [senders, setSenders] = useState<Sender[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1259,26 +1282,32 @@ export default function ProductsManager() {
                     headline="No products yet"
                     subtext="A product groups your templates and holds the credentials your service uses to trigger sends — a public client ID and a shared secret. Create one to get started."
                     cta={
-                        <Button
-                            onClick={() => setCreateOpen(true)}
-                            startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={PRIMARY_BTN}
-                        >
-                            Create product
-                        </Button>
+                        canWrite ? (
+                            <Button
+                                onClick={() => setCreateOpen(true)}
+                                startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                                sx={PRIMARY_BTN}
+                            >
+                                Create product
+                            </Button>
+                        ) : (
+                            <ReadOnlyChip />
+                        )
                     }
                 />
             ) : (
                 <Box>
-                    <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-                        <Button
-                            onClick={() => setCreateOpen(true)}
-                            startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={PRIMARY_BTN}
-                        >
-                            New product
-                        </Button>
-                    </Stack>
+                    {canWrite && (
+                        <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <Button
+                                onClick={() => setCreateOpen(true)}
+                                startIcon={<AddIcon sx={{ fontSize: "1.1rem !important" }} />}
+                                sx={PRIMARY_BTN}
+                            >
+                                New product
+                            </Button>
+                        </Stack>
+                    )}
                     <TextField
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}

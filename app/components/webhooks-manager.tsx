@@ -38,6 +38,7 @@ import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState, GHOST_BTN, PRIMARY_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
+import { useRole } from "./role-provider";
 
 // ── Palette ─────────────────────────────────────────────────────────────────
 const ACCENT = "#9b7bf7";
@@ -159,6 +160,21 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
         >
             {children}
         </Typography>
+    );
+}
+
+// ── Read-only access chip (shown to viewers where a write button would be) ───
+function ReadOnlyChip() {
+    return (
+        <Chip
+            label="Read-only access"
+            size="small"
+            sx={{
+                color: "rgba(245,245,244,0.5)",
+                bgcolor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.07)",
+            }}
+        />
     );
 }
 
@@ -823,6 +839,7 @@ function WebhookRow({
     onDelete: () => void;
     busy: boolean;
 }) {
+    const { canWrite } = useRole();
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const triggerUrl = `${origin}/v1/hooks/${webhook.endpoint_key}`;
     const snippet = buildSnippet(origin, webhook.endpoint_key, variables);
@@ -885,6 +902,8 @@ function WebhookRow({
                     >
                         Usage
                     </Button>
+                    {canWrite && (
+                    <>
                     <IconButton
                         onClick={(e) => setMenuAnchor(e.currentTarget)}
                         size="small"
