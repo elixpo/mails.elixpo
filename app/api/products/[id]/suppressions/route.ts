@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { getProduct } from "@/lib/products";
 import { getSession } from "@/lib/session";
+import { requireWriteRole } from "@/lib/workspace-guard";
 import { listSuppressions, suppress, suppressionToPublic, unsuppress } from "@/lib/suppressions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -15,7 +16,7 @@ async function ownedProduct(request: NextRequest, id: string) {
     const db = await getDatabase();
     const product = await getProduct(db, session.tenantId, id);
     if (!product) return { error: NextResponse.json({ error: "not_found" }, { status: 404 }) };
-    return { db, product };
+    return { db, product, session };
 }
 
 /** GET /api/products/:id/suppressions — the product's unsubscribe list. */
@@ -32,6 +33,9 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const { id } = await params;
     const ctx = await ownedProduct(request, id);
     if (ctx.error) return ctx.error;
+
+    const denied = requireWriteRole(ctx.session);
+    if (denied) return denied;
 
     let body: any;
     try {
@@ -52,6 +56,9 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     const { id } = await params;
     const ctx = await ownedProduct(request, id);
     if (ctx.error) return ctx.error;
+
+    const denied = requireWriteRole(ctx.session);
+    if (denied) return denied;
     const email = request.nextUrl.searchParams.get("email");
     if (!email) return NextResponse.json({ error: "missing_email" }, { status: 400 });
     await unsuppress(ctx.db, id, email);

@@ -3,6 +3,7 @@ export const runtime = "edge";
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { getSession } from "@/lib/session";
+import { requireWriteRole } from "@/lib/workspace-guard";
 import { deleteSender, getSender, toPublic, updateSender } from "@/lib/senders";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest, { params }: Ctx) {
 export async function PATCH(request: NextRequest, { params }: Ctx) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
     const { id } = await params;
 
     let body: any;
@@ -57,6 +61,9 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
 export async function DELETE(request: NextRequest, { params }: Ctx) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
     const { id } = await params;
 
     const db = await getDatabase();

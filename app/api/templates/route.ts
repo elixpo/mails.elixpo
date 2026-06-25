@@ -6,6 +6,7 @@ import { cleanupOrphanImages } from "@/lib/cloudinary";
 import { getDatabase } from "@/lib/d1-client";
 import { getOrCreateDefaultProduct, getProduct, slugify } from "@/lib/products";
 import { getSession } from "@/lib/session";
+import { requireWriteRole } from "@/lib/workspace-guard";
 import { createTemplate, listTemplates, toSummary } from "@/lib/templates";
 
 function sessionUrls(body: any): string[] {
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
 
     let body: any;
     try {

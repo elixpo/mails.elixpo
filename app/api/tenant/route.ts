@@ -3,6 +3,7 @@ export const runtime = "edge";
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { getSession } from "@/lib/session";
+import { requireAdminRole } from "@/lib/workspace-guard";
 import { getTenant } from "@/lib/tenant";
 
 const MAX_NAME = 80;
@@ -30,6 +31,9 @@ export async function PATCH(request: NextRequest) {
     if (!session) {
         return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
+
+    const denied = requireAdminRole(session);
+    if (denied) return denied;
 
     let body: any;
     try {

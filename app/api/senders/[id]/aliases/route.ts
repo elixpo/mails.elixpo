@@ -3,6 +3,7 @@ export const runtime = "edge";
 import { type NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/d1-client";
 import { getSession } from "@/lib/session";
+import { requireWriteRole } from "@/lib/workspace-guard";
 import { addAlias, aliasToPublic, getSender, listAliases } from "@/lib/senders";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest, { params }: Ctx) {
 export async function POST(request: NextRequest, { params }: Ctx) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
     const { id } = await params;
 
     let body: any;

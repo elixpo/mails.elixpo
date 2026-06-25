@@ -3,6 +3,7 @@ export const runtime = "edge";
 import { type NextRequest, NextResponse } from "next/server";
 import { cloudinaryConfig, uploadImage } from "@/lib/cloudinary";
 import { getSession } from "@/lib/session";
+import { requireWriteRole } from "@/lib/workspace-guard";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const OK_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"];
@@ -15,6 +16,9 @@ const OK_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/s
 export async function POST(request: NextRequest) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
 
     const cfg = await cloudinaryConfig();
     if (!cfg) {

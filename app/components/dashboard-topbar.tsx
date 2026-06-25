@@ -1,7 +1,9 @@
 "use client";
 
+import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import GroupsIcon from "@mui/icons-material/Groups";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
@@ -24,8 +26,16 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardNavLinks } from "./dashboard-nav";
+
+interface WorkspaceOption {
+    tenantId: string;
+    name: string;
+    slug: string | null;
+    role: string;
+    active: boolean;
+}
 
 const BORDER = "rgba(255,255,255,0.07)";
 const ACCENT = "#9b7bf7";
@@ -78,6 +88,43 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
+    const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
+    const [switching, setSwitching] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch("/api/auth/me")
+            .then((r) => r.json())
+            .then((raw) => {
+                const data = raw as { workspaces?: WorkspaceOption[] };
+                if (!cancelled && Array.isArray(data?.workspaces)) setWorkspaces(data.workspaces);
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    async function switchWorkspace(tenantId: string) {
+        if (switching) return;
+        setSwitching(true);
+        try {
+            const res = await fetch("/api/workspace/switch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tenantId }),
+            });
+            if (res.ok) {
+                window.location.href = "/dashboard";
+                return;
+            }
+        } catch {
+            // fall through
+        }
+        setSwitching(false);
+    }
+
+    const activeWorkspace = workspaces.find((w) => w.active);
 
     return (
         <>
@@ -217,10 +264,54 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                     </Box>
                     <Divider sx={{ borderColor: BORDER }} />
 
+                    {/* Workspace switcher */}
+                    {workspaces.length > 1 && (
+                        <>
+                            <Typography sx={{ px: 2, pt: 1.2, pb: 0.4, fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(245,245,244,0.35)" }}>
+                                Switch workspace
+                            </Typography>
+                            {workspaces.map((w) => (
+                                <MenuItem
+                                    key={w.tenantId}
+                                    disabled={switching}
+                                    onClick={() => {
+                                        if (w.active) {
+                                            setAnchorEl(null);
+                                        } else {
+                                            switchWorkspace(w.tenantId);
+                                        }
+                                    }}
+                                    sx={MENU_ITEM_SX}
+                                >
+                                    <GroupsIcon sx={MENU_ICON_SX} />
+                                    <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                                        <Typography sx={{ fontSize: "0.84rem", color: "#f5f5f4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                            {w.name}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: "0.66rem", color: "rgba(245,245,244,0.4)", textTransform: "capitalize" }}>
+                                            {w.role}
+                                        </Typography>
+                                    </Box>
+                                    {w.active && <CheckIcon sx={{ fontSize: 16, color: ACCENT }} />}
+                                </MenuItem>
+                            ))}
+                            <Divider sx={{ borderColor: BORDER }} />
+                        </>
+                    )}
+
                     {/* Account */}
                     <MenuItem component={Link} href="/dashboard" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
                         <SpaceDashboardIcon sx={MENU_ICON_SX} />
                         Overview
+                    </MenuItem>
+                    <MenuItem
+                        component={Link}
+                        href={activeWorkspace?.slug ? `/workspace/${activeWorkspace.slug}` : "/workspace"}
+                        onClick={() => setAnchorEl(null)}
+                        sx={MENU_ITEM_SX}
+                    >
+                        <GroupsIcon sx={MENU_ICON_SX} />
+                        Workspace &amp; team
                     </MenuItem>
                     <MenuItem component={Link} href="/dashboard/settings" onClick={() => setAnchorEl(null)} sx={MENU_ITEM_SX}>
                         <ManageAccountsIcon sx={MENU_ICON_SX} />

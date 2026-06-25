@@ -6,6 +6,7 @@ import { decryptSecret } from "@/lib/encryption";
 import { getSession } from "@/lib/session";
 import { getAlias, getSender, markSenderVerified } from "@/lib/senders";
 import { relayViaSender } from "@/lib/smtp-sender";
+import { requireWriteRole } from "@/lib/workspace-guard";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,6 +18,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const denied = requireWriteRole(session);
+    if (denied) return denied;
     const { id } = await params;
 
     let body: any = {};
