@@ -10,7 +10,10 @@
 set -e
 
 MODE="${1:-fix}"
-BIOME="npx --yes @biomejs/biome"
+# Pin to the version the project is configured for (biome.json uses the 1.9.4
+# schema; package.json devDependency is ^1.9.4). Without a pin, `npx --yes`
+# pulls the latest major (2.x) whose config format is incompatible and fails CI.
+BIOME="npx --yes @biomejs/biome@1.9.4"
 
 case "$MODE" in
   fix|"")
