@@ -11,7 +11,7 @@ import { Box, Stack } from "@mui/material";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const ACCENT = "#9b7bf7";
+const ACCENT = "#ff7759"; // Coral
 
 export interface NavItem {
     label: string;
@@ -70,19 +70,19 @@ export function DashboardNavLinks({
                             borderRadius: "10px",
                             textDecoration: "none",
                             fontSize: horizontal ? "0.86rem" : "0.9rem",
-                            fontWeight: active ? 700 : 500,
+                            fontWeight: active ? 600 : 500,
                             whiteSpace: "nowrap",
-                            color: active ? "#f5f5f4" : "rgba(245,245,244,0.62)",
-                            background: active ? "rgba(155,123,247,0.12)" : "transparent",
-                            border: `1px solid ${active ? "rgba(155,123,247,0.28)" : "transparent"}`,
+                            color: active ? "#ffffff" : "rgba(255,255,255,0.65)",
+                            background: active ? "rgba(255, 119, 89, 0.12)" : "transparent",
+                            border: `1px solid ${active ? "rgba(255, 119, 89, 0.25)" : "transparent"}`,
                             transition: "all 0.15s ease",
                             "&:hover": {
-                                color: "#f5f5f4",
-                                background: active ? "rgba(155,123,247,0.14)" : "rgba(255,255,255,0.04)",
+                                color: "#ffffff",
+                                background: active ? "rgba(255, 119, 89, 0.15)" : "rgba(255,255,255,0.04)",
                             },
                         }}
                     >
-                        <Icon sx={{ fontSize: 19, color: active ? ACCENT : "rgba(245,245,244,0.55)" }} />
+                        <Icon sx={{ fontSize: 19, color: active ? ACCENT : "rgba(255,255,255,0.55)" }} />
                         {item.label}
                     </Box>
                 );

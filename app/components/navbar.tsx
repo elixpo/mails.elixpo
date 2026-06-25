@@ -8,6 +8,7 @@ import StarIcon from "@mui/icons-material/Star";
 import { Avatar, Box, Button, Chip, Drawer, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DashboardNavLinks } from "./dashboard-nav";
 
@@ -17,7 +18,7 @@ interface Me {
     avatar: string | null;
 }
 
-const ACCENT = "#9b7bf7";
+const ACCENT = "#ff7759";
 const REPO = "elixpo/mail.elixpo";
 const REPO_URL = `https://github.com/${REPO}`;
 
@@ -73,15 +74,59 @@ const Navbar = () => {
         };
     }, []);
 
+    const pathname = usePathname() || "";
+    const isDashboard = pathname.startsWith("/dashboard");
+
+    // Cohere-style variables based on route context
+    const navBg = isDashboard ? "rgba(11, 13, 18, 0.72)" : "rgba(255, 255, 255, 0.85)";
+    const navBorder = isDashboard ? "1px solid rgba(255,255,255,0.07)" : "1px solid var(--border-light)";
+    const textColor = isDashboard ? "#f4f4f6" : "#000000";
+    const brandColor = isDashboard ? "#f4f4f6" : "#000000";
+    const linkColor = isDashboard ? "rgba(244,244,246,0.7)" : "rgba(33, 33, 33, 0.65)";
+    const linkHoverBg = isDashboard ? "rgba(255,255,255,0.05)" : "rgba(0, 0, 0, 0.04)";
+    const linkHoverColor = isDashboard ? "#fff" : "#000000";
+    const githubBorder = isDashboard ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)";
+    const githubTextColor = isDashboard ? "rgba(244,244,246,0.8)" : "#212121";
+    const githubHoverBg = isDashboard ? "rgba(155,123,247,0.08)" : "rgba(0, 0, 0, 0.03)";
+    const githubHoverBorder = isDashboard ? "rgba(155,123,247,0.45)" : "#000000";
+    
+    // Primary CTA (Sign In) style: Cohere Black pill for public, purple gradient/accent for dashboard/custom
+    const ctaStyles = isDashboard
+        ? {
+              background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
+              borderRadius: "10px",
+              boxShadow: "0 4px 14px rgba(155,123,247,0.32)",
+              "&:hover": {
+                  background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)",
+                  boxShadow: "0 6px 20px rgba(155,123,247,0.45)",
+              },
+          }
+        : {
+              background: "#17171c",
+              color: "#ffffff",
+              borderRadius: "32px", // Pill!
+              px: 2.5,
+              py: 0.9,
+              fontSize: "0.88rem",
+              fontWeight: 500,
+              fontFamily: "var(--font-sans)",
+              textTransform: "none",
+              transition: "background 0.2s ease",
+              "&:hover": {
+                  background: "#000000",
+              },
+          };
+
     return (
         <AppBar
             position="sticky"
             elevation={0}
             sx={{
-                background: "rgba(11, 13, 18, 0.72)",
+                background: navBg,
                 backdropFilter: "blur(20px)",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                borderBottom: navBorder,
                 zIndex: 1000,
+                color: textColor,
             }}
         >
             <Toolbar
@@ -114,12 +159,13 @@ const Navbar = () => {
                         sx={{
                             fontWeight: 700,
                             fontSize: "1.15rem",
-                            color: "#f4f4f6",
+                            color: brandColor,
                             letterSpacing: "-0.01em",
+                            fontFamily: "var(--font-display)",
                         }}
                     >
                         Elixpo
-                        <Box component="span" sx={{ color: ACCENT }}>
+                        <Box component="span" sx={{ color: isDashboard ? ACCENT : "#ff7759" }}>
                             {" "}
                             Mails
                         </Box>
@@ -130,13 +176,13 @@ const Navbar = () => {
                             size="small"
                             sx={{
                                 display: { xs: "none", sm: "inline-flex" },
-                                bgcolor: "rgba(155, 123, 247, 0.12)",
-                                color: ACCENT,
+                                bgcolor: isDashboard ? "rgba(155, 123, 247, 0.12)" : "rgba(255, 119, 89, 0.08)",
+                                color: isDashboard ? ACCENT : "#ff7759",
                                 fontSize: "10px",
                                 height: "22px",
                                 fontWeight: 600,
                                 letterSpacing: "0.04em",
-                                border: "1px solid rgba(155, 123, 247, 0.3)",
+                                border: isDashboard ? "1px solid rgba(155, 123, 247, 0.3)" : "1px solid rgba(255, 119, 89, 0.3)",
                             }}
                         />
                     )}
@@ -155,12 +201,13 @@ const Navbar = () => {
                                     href={l.href}
                                     sx={{
                                         textTransform: "none",
-                                        fontWeight: 600,
+                                        fontWeight: 500,
                                         fontSize: "0.88rem",
-                                        color: "rgba(244,244,246,0.7)",
+                                        color: linkColor,
                                         px: 1.6,
                                         borderRadius: "9px",
-                                        "&:hover": { color: "#fff", background: "rgba(255,255,255,0.05)" },
+                                        fontFamily: "var(--font-sans)",
+                                        "&:hover": { color: linkHoverColor, background: linkHoverBg },
                                     }}
                                 >
                                     {l.label}
@@ -187,24 +234,25 @@ const Navbar = () => {
                             height: 38,
                             px: 1.3,
                             gap: 0.9,
-                            borderRadius: "10px",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            color: "rgba(244,244,246,0.8)",
+                            borderRadius: isDashboard ? "10px" : "32px",
+                            border: `1px solid ${githubBorder}`,
+                            color: githubTextColor,
                             textDecoration: "none",
                             fontSize: "0.85rem",
-                            fontWeight: 700,
+                            fontWeight: 500,
+                            fontFamily: "var(--font-sans)",
                             transition: "all 0.18s ease",
                             "&:hover": {
-                                color: "#fff",
-                                borderColor: "rgba(155,123,247,0.45)",
-                                background: "rgba(155,123,247,0.08)",
+                                color: isDashboard ? "#fff" : "#000000",
+                                borderColor: githubHoverBorder,
+                                background: githubHoverBg,
                             },
                         }}
                     >
                         <GitHubIcon sx={{ fontSize: 19 }} />
                         {stars !== null && (
                             <>
-                                <Box sx={{ width: "1px", height: 16, background: "rgba(255,255,255,0.15)" }} />
+                                <Box sx={{ width: "1px", height: 16, background: isDashboard ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" }} />
                                 <Stack direction="row" spacing={0.3} alignItems="center">
                                     <StarIcon sx={{ fontSize: 14, color: "#fbbf24" }} />
                                     <Box component="span">{formatStars(stars)}</Box>
@@ -229,30 +277,30 @@ const Navbar = () => {
                                 gap: 1,
                                 textDecoration: "none",
                                 color: "inherit",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                borderRadius: "10px",
+                                border: isDashboard ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.12)",
+                                borderRadius: isDashboard ? "10px" : "32px",
                                 pl: 0.6,
                                 pr: { xs: 0.6, sm: 1 },
                                 py: 0.5,
                                 transition: "all 0.15s ease",
-                                "&:hover": { borderColor: "rgba(155,123,247,0.4)", background: "rgba(155,123,247,0.06)" },
+                                "&:hover": { borderColor: isDashboard ? "rgba(155,123,247,0.4)" : "#000000", background: isDashboard ? "rgba(155,123,247,0.06)" : "rgba(0,0,0,0.02)" },
                             }}
                         >
                             <Avatar
                                 src={me.avatar || undefined}
-                                sx={{ width: 28, height: 28, fontSize: "0.85rem", bgcolor: "rgba(155,123,247,0.4)" }}
+                                sx={{ width: 28, height: 28, fontSize: "0.85rem", bgcolor: isDashboard ? "rgba(155,123,247,0.4)" : "#17171c" }}
                             >
                                 {(me.name || me.email || "?").charAt(0).toUpperCase()}
                             </Avatar>
                             <Stack sx={{ display: { xs: "none", sm: "flex" }, alignItems: "flex-start", lineHeight: 1.1 }}>
-                                <Typography sx={{ fontSize: "0.82rem", fontWeight: 600, color: "#f5f5f4", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <Typography sx={{ fontSize: "0.82rem", fontWeight: 600, color: textColor, maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {me.name || me.email}
                                 </Typography>
-                                <Typography sx={{ fontSize: "0.7rem", color: "rgba(245,245,244,0.45)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <Typography sx={{ fontSize: "0.7rem", color: isDashboard ? "rgba(245,245,244,0.45)" : "rgba(33,33,33,0.55)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {me.email}
                                 </Typography>
                             </Stack>
-                            <KeyboardArrowDownIcon sx={{ fontSize: 18, color: "rgba(245,245,244,0.5)", display: { xs: "none", sm: "block" } }} />
+                            <KeyboardArrowDownIcon sx={{ fontSize: 18, color: isDashboard ? "rgba(245,245,244,0.5)" : "rgba(33,33,33,0.4)", display: { xs: "none", sm: "block" } }} />
                         </Box>
                     ) : (
                         <Button
@@ -261,18 +309,9 @@ const Navbar = () => {
                             disableElevation
                             sx={{
                                 textTransform: "none",
-                                fontWeight: 600,
+                                fontWeight: 500,
                                 fontSize: "0.9rem",
-                                color: "#fff",
-                                background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
-                                borderRadius: "10px",
-                                px: 2.2,
-                                py: 0.8,
-                                boxShadow: "0 4px 14px rgba(155,123,247,0.32)",
-                                "&:hover": {
-                                    background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)",
-                                    boxShadow: "0 6px 20px rgba(155,123,247,0.45)",
-                                },
+                                ...ctaStyles,
                             }}
                         >
                             Sign in
@@ -283,7 +322,7 @@ const Navbar = () => {
                     <IconButton
                         onClick={() => setDrawerOpen(true)}
                         aria-label="Open menu"
-                        sx={{ display: { xs: "inline-flex", md: "none" }, color: "rgba(244,244,246,0.85)" }}
+                        sx={{ display: { xs: "inline-flex", md: "none" }, color: isDashboard ? "rgba(244,244,246,0.85)" : "#212121" }}
                     >
                         <MenuIcon />
                     </IconButton>
@@ -299,9 +338,9 @@ const Navbar = () => {
                 PaperProps={{
                     sx: {
                         width: 282,
-                        background: "#0d1016",
-                        borderLeft: "1px solid rgba(255,255,255,0.08)",
-                        color: "#f5f5f4",
+                        background: isDashboard ? "#0d1016" : "#ffffff",
+                        borderLeft: isDashboard ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e5e7eb",
+                        color: isDashboard ? "#f5f5f4" : "#212121",
                         p: 2,
                     },
                 }}
@@ -309,15 +348,15 @@ const Navbar = () => {
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2, px: 0.5 }}>
                     <Stack direction="row" alignItems="center" spacing={1.1}>
                         <Box component="img" src="/mark.png" alt="Elixpo Mails" sx={{ height: 26, width: 26, borderRadius: "7px" }} />
-                        <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: isDashboard ? "#fff" : "#000" }}>
                             Elixpo
-                            <Box component="span" sx={{ color: ACCENT }}>
+                            <Box component="span" sx={{ color: isDashboard ? ACCENT : "#ff7759" }}>
                                 {" "}
                                 Mails
                             </Box>
                         </Typography>
                     </Stack>
-                    <IconButton onClick={() => setDrawerOpen(false)} aria-label="Close menu" sx={{ color: "rgba(245,245,244,0.6)" }}>
+                    <IconButton onClick={() => setDrawerOpen(false)} aria-label="Close menu" sx={{ color: isDashboard ? "rgba(245,245,244,0.6)" : "rgba(0,0,0,0.5)" }}>
                         <CloseIcon />
                     </IconButton>
                 </Stack>
@@ -336,13 +375,13 @@ const Navbar = () => {
                                 sx={{
                                     justifyContent: "flex-start",
                                     textTransform: "none",
-                                    fontWeight: 600,
+                                    fontWeight: 500,
                                     fontSize: "0.95rem",
-                                    color: "rgba(244,244,246,0.8)",
+                                    color: linkColor,
                                     px: 1.5,
                                     py: 1.1,
                                     borderRadius: "10px",
-                                    "&:hover": { color: "#fff", background: "rgba(255,255,255,0.05)" },
+                                    "&:hover": { color: linkHoverColor, background: linkHoverBg },
                                 }}
                             >
                                 {l.label}
@@ -355,14 +394,9 @@ const Navbar = () => {
                             sx={{
                                 mt: 1,
                                 textTransform: "none",
-                                fontWeight: 700,
+                                fontWeight: 500,
                                 fontSize: "0.95rem",
-                                color: "#fff",
-                                background: "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)",
-                                borderRadius: "10px",
-                                py: 1.1,
-                                boxShadow: "0 4px 14px rgba(155,123,247,0.32)",
-                                "&:hover": { background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)" },
+                                ...ctaStyles,
                             }}
                         >
                             Sign in

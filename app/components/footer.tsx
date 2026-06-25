@@ -39,6 +39,7 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
 
 const Footer = () => {
     const [copied, setCopied] = useState(false);
+    const [emailVal, setEmailVal] = useState("");
 
     const copyEmail = async () => {
         try {
@@ -55,68 +56,141 @@ const Footer = () => {
             sx={{
                 position: "relative",
                 zIndex: 1,
-                mt: { xs: 6, md: 10 },
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                background:
-                    "linear-gradient(180deg, rgba(11,13,18,0) 0%, rgba(11,13,18,0.4) 100%)",
-                backdropFilter: "blur(12px)",
+                mt: { xs: 8, md: 12 },
+                borderTop: "1px solid #292933",
+                background: "#17171c", // Near-Black Primary
+                color: "#ffffff",
+                pt: { xs: 7, md: 9 },
+                pb: { xs: 5, md: 6 },
             }}
         >
-            <Box sx={{ maxWidth: "1200px", mx: "auto", px: { xs: 2.5, md: 4 }, py: { xs: 5, md: 6 } }}>
+            <Box sx={{ maxWidth: "1200px", mx: "auto", px: { xs: 2.5, md: 4 } }}>
                 <Stack
-                    direction={{ xs: "column", md: "row" }}
-                    spacing={{ xs: 4, md: 6 }}
+                    direction={{ xs: "column", lg: "row" }}
+                    spacing={{ xs: 6, lg: 8 }}
                     justifyContent="space-between"
+                    sx={{ mb: { xs: 6, md: 8 } }}
                 >
-                    <Box sx={{ maxWidth: 360 }}>
-                        <Stack direction="row" alignItems="center" spacing={1.2} sx={{ mb: 1.2 }}>
+                    {/* Newsletter Block on Left */}
+                    <Box sx={{ maxWidth: 440, width: "100%" }}>
+                        <Typography
+                            sx={{
+                                color: "#ff7759", // Coral accent
+                                fontSize: "12px",
+                                fontWeight: 500,
+                                letterSpacing: "0.08em",
+                                textTransform: "uppercase",
+                                mb: 1,
+                                fontFamily: "var(--font-mono)",
+                            }}
+                        >
+                            AI moves fast
+                        </Typography>
+                        <Typography
+                            variant="h4"
+                            sx={{
+                                color: "#ffffff",
+                                fontWeight: 400,
+                                fontSize: "1.75rem",
+                                letterSpacing: "-0.02em",
+                                lineHeight: 1.2,
+                                mb: 2,
+                                fontFamily: "var(--font-display)",
+                            }}
+                        >
+                            Stay updated on modern transactional email tech.
+                        </Typography>
+                        
+                        {/* Single-line Email Input */}
+                        <Stack 
+                            direction="row" 
+                            spacing={1} 
+                            sx={{ 
+                                position: "relative",
+                                maxWidth: 360,
+                                borderBottom: "1.5px solid #292933",
+                                pb: 0.5,
+                                "&:focus-within": {
+                                    borderBottomColor: "#9b60aa", // Form Focus Violet
+                                }
+                            }}
+                        >
                             <Box
-                                component="img"
-                                src="/mark.png"
-                                alt="mail.elixpo"
-                                sx={{ height: 28, width: 28, borderRadius: "7px", display: "block" }}
+                                component="input"
+                                type="email"
+                                placeholder="Subscribe to updates"
+                                value={emailVal}
+                                onChange={(e: any) => setEmailVal(e.target.value)}
+                                sx={{
+                                    width: "100%",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#ffffff",
+                                    fontSize: "0.95rem",
+                                    outline: "none",
+                                    py: 1,
+                                    "&::placeholder": {
+                                        color: "rgba(255,255,255,0.3)"
+                                    }
+                                }}
                             />
-                            <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: "#f4f4f6" }}>
-                                Elixpo
-                                <Box component="span" sx={{ color: ACCENT }}>
-                                    {" "}
-                                    Mails
-                                </Box>
-                            </Typography>
+                            <Button
+                                onClick={() => {
+                                    if (emailVal) {
+                                        alert("Thank you for subscribing!");
+                                        setEmailVal("");
+                                    }
+                                }}
+                                sx={{
+                                    minWidth: 0,
+                                    p: 1,
+                                    color: "#ffffff",
+                                    "&:hover": {
+                                        color: "#ff7759"
+                                    }
+                                }}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </Button>
                         </Stack>
-                        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-                            Event-based transactional email on the edge. Bring your own
-                            sender, design templates with {"{{variables}}"} in a live
-                            editor, and trigger sends from your service via webhook —
-                            without building mail infrastructure.
+                        <Typography sx={{ color: "#93939f", fontSize: "11px", mt: 1.5, lineHeight: 1.4 }}>
+                            By subscribing, you agree to our privacy policy. Transactional mail infrastructure without the complexity.
                         </Typography>
                     </Box>
 
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 3, sm: 6 }}>
+                    {/* Columns on Right */}
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 4, sm: 6, md: 8 }}>
                         {COLUMNS.map((col) => (
-                            <Box key={col.heading}>
+                            <Box key={col.heading} sx={{ minWidth: 100 }}>
                                 <Typography
                                     sx={{
-                                        color: "rgba(255,255,255,0.45)",
-                                        fontSize: "0.72rem",
-                                        fontWeight: 700,
-                                        letterSpacing: "0.1em",
+                                        color: "#ffffff", // White section labels
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        letterSpacing: "0.08em",
                                         textTransform: "uppercase",
-                                        mb: 1.4,
+                                        mb: 2,
+                                        fontFamily: "var(--font-mono)",
                                     }}
                                 >
                                     {col.heading}
                                 </Typography>
-                                <Stack spacing={1.1}>
+                                <Stack spacing={1.2}>
                                     {col.links.map((l) => (
                                         <Link
                                             key={l.label}
                                             href={l.href}
                                             style={{
-                                                color: "rgba(255,255,255,0.75)",
+                                                color: "#93939f", // Muted slate links
                                                 textDecoration: "none",
                                                 fontSize: "0.88rem",
+                                                fontFamily: "var(--font-sans)",
+                                                transition: "color 0.2s ease",
                                             }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = "#93939f"; }}
                                         >
                                             {l.label}
                                         </Link>
@@ -128,12 +202,13 @@ const Footer = () => {
                         <Box>
                             <Typography
                                 sx={{
-                                    color: "rgba(255,255,255,0.45)",
-                                    fontSize: "0.72rem",
-                                    fontWeight: 700,
-                                    letterSpacing: "0.1em",
+                                    color: "#ffffff",
+                                    fontSize: "12px",
+                                    fontWeight: 500,
+                                    letterSpacing: "0.08em",
                                     textTransform: "uppercase",
-                                    mb: 1.4,
+                                    mb: 2,
+                                    fontFamily: "var(--font-mono)",
                                 }}
                             >
                                 Contact
@@ -141,21 +216,20 @@ const Footer = () => {
                             <Tooltip title={copied ? "Copied!" : "Click to copy"} arrow>
                                 <Button
                                     onClick={copyEmail}
-                                    startIcon={<MailOutlineIcon sx={{ fontSize: 18 }} />}
-                                    endIcon={<ContentCopyIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }} />}
                                     sx={{
                                         textTransform: "none",
-                                        color: "rgba(255,255,255,0.85)",
-                                        fontFamily: "var(--font-geist-mono)",
+                                        color: "#93939f",
+                                        fontFamily: "var(--font-mono)",
                                         fontSize: "0.85rem",
-                                        border: "1px solid rgba(255,255,255,0.12)",
-                                        borderRadius: "10px",
-                                        px: 1.5,
-                                        py: 0.6,
+                                        border: "1px solid #292933",
+                                        borderRadius: "32px", // Pill outline
+                                        px: 2,
+                                        py: 0.7,
+                                        transition: "all 0.2s ease",
                                         "&:hover": {
-                                            color: "#fff",
-                                            borderColor: "rgba(155,123,247,0.45)",
-                                            background: "rgba(155,123,247,0.08)",
+                                            color: "#ffffff",
+                                            borderColor: "#ff7759",
+                                            background: "rgba(255, 119, 89, 0.05)",
                                         },
                                     }}
                                 >
@@ -168,15 +242,14 @@ const Footer = () => {
 
                 <Box
                     sx={{
-                        mt: { xs: 4, md: 5 },
                         pt: 3,
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
+                        borderTop: "1px solid #292933",
                         display: "flex",
                         flexDirection: { xs: "column", sm: "row" },
                         justifyContent: "space-between",
                         alignItems: { xs: "flex-start", sm: "center" },
                         gap: 1.5,
-                        color: "rgba(255,255,255,0.4)",
+                        color: "#93939f", // Muted slate
                         fontSize: "0.8rem",
                     }}
                 >

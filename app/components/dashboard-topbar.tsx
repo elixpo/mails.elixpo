@@ -28,7 +28,7 @@ import { useState } from "react";
 import { DashboardNavLinks } from "./dashboard-nav";
 
 const BORDER = "rgba(255,255,255,0.07)";
-const ACCENT = "#9b7bf7";
+const ACCENT = "#ff7759";
 
 const MENU_ITEM_SX = {
     fontSize: "0.86rem",
