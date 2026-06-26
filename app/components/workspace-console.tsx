@@ -232,6 +232,7 @@ export default function WorkspaceConsole(props: WorkspaceConsoleProps) {
     const [loading, setLoading] = useState(true);
     const [noAccess, setNoAccess] = useState(false);
     const [data, setData] = useState<WorkspaceResponse | null>(null);
+    const [myWorkspaces, setMyWorkspaces] = useState<MeWorkspace[]>([]);
 
     const role = data?.role ?? "viewer";
     const isAdmin = role === "owner" || role === "admin";
@@ -262,6 +263,7 @@ export default function WorkspaceConsole(props: WorkspaceConsoleProps) {
                     workspaces?: MeWorkspace[];
                 } | null;
                 const workspaces = me?.workspaces ?? [];
+                if (!cancelled) setMyWorkspaces(workspaces);
                 const found = workspaces.find((w) => w.slug === slug);
 
                 if (!found) {
@@ -333,21 +335,189 @@ export default function WorkspaceConsole(props: WorkspaceConsoleProps) {
     const visibleMembers = data.members.filter((m) => m.status !== "removed");
 
     return (
-        <Stack spacing={2.5}>
-            <HeaderCard workspace={data.workspace} role={role} isAdmin={isAdmin} />
+        <Box
+            sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(12, 1fr)" },
+                gap: 2.5,
+                alignItems: "start",
+            }}
+        >
+            {/* Header — full width */}
+            <Box sx={{ gridColumn: { md: "1 / -1" } }}>
+                <HeaderCard workspace={data.workspace} role={role} isAdmin={isAdmin} />
+            </Box>
 
-            <CosmeticsCard
-                workspace={data.workspace}
-                isAdmin={isAdmin}
-                onUpdated={(next) =>
-                    setData((prev) => (prev ? { ...prev, workspace: next } : prev))
-                }
-            />
+            {/* Left: workspace identity */}
+            <Box sx={{ gridColumn: { md: "span 7" } }}>
+                <CosmeticsCard
+                    workspace={data.workspace}
+                    isAdmin={isAdmin}
+                    onUpdated={(next) =>
+                        setData((prev) => (prev ? { ...prev, workspace: next } : prev))
+                    }
+                />
+            </Box>
 
-            <MembersCard members={visibleMembers} isAdmin={isAdmin} onRefresh={refresh} />
+            {/* Right column: invite link (admin) + your workspaces */}
+            <Box
+                sx={{
+                    gridColumn: { md: "span 5" },
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2.5,
+                }}
+            >
+                {isAdmin && <InviteLinkCard invite={data.invite} onRefresh={refresh} />}
+                <YourWorkspacesCard workspaces={myWorkspaces} currentSlug={slug} />
+            </Box>
 
-            {isAdmin && <InviteLinkCard invite={data.invite} onRefresh={refresh} />}
-        </Stack>
+            {/* Members — full width */}
+            <Box sx={{ gridColumn: { md: "1 / -1" } }}>
+                <MembersCard members={visibleMembers} isAdmin={isAdmin} onRefresh={refresh} />
+            </Box>
+        </Box>
+    );
+}
+
+/* ================================================================== */
+/* Your workspaces — every workspace the user belongs to              */
+/* ================================================================== */
+
+function YourWorkspacesCard({
+    workspaces,
+    currentSlug,
+}: {
+    workspaces: MeWorkspace[];
+    currentSlug: string;
+}) {
+    const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+
+    async function openDashboard(w: MeWorkspace) {
+        if (switchingTo) return;
+        // Already the active workspace → straight to the dashboard.
+        if (w.active) {
+            window.location.href = "/dashboard";
+            return;
+        }
+        setSwitchingTo(w.tenantId);
+        try {
+            await fetch("/api/workspace/switch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tenantId: w.tenantId }),
+            });
+            window.location.href = "/dashboard";
+        } catch {
+            setSwitchingTo(null);
+        }
+    }
+
+    return (
+        <GlassCard>
+            <Typography sx={{ ...sectionTitleSx, mb: 0.4 }}>Your workspaces</Typography>
+            <Typography sx={{ color: MUTED, fontSize: "0.85rem", mb: 2 }}>
+                Every workspace you&apos;ve joined, with your role in each.
+            </Typography>
+
+            <Stack divider={<Box sx={{ borderBottom: `1px solid ${BORDER}` }} />}>
+                {workspaces.map((w) => {
+                    const busy = switchingTo === w.tenantId;
+                    return (
+                        <Stack
+                            key={w.tenantId}
+                            direction="row"
+                            spacing={1.2}
+                            alignItems="center"
+                            sx={{ py: 1.4 }}
+                        >
+                            <Avatar
+                                sx={{
+                                    width: 34,
+                                    height: 34,
+                                    bgcolor: "rgba(155,123,247,0.18)",
+                                    color: ACCENT,
+                                    fontWeight: 700,
+                                    fontSize: "0.85rem",
+                                }}
+                            >
+                                {w.name.charAt(0).toUpperCase()}
+                            </Avatar>
+
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Stack direction="row" spacing={0.8} alignItems="center">
+                                    <Typography
+                                        sx={{
+                                            color: TEXT,
+                                            fontWeight: 600,
+                                            fontSize: "0.92rem",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {w.name}
+                                    </Typography>
+                                    {w.active && (
+                                        <Chip
+                                            label="Active"
+                                            size="small"
+                                            sx={{
+                                                height: 18,
+                                                fontSize: "0.62rem",
+                                                fontWeight: 700,
+                                                color: "#6ee7b7",
+                                                background: "rgba(110,231,183,0.12)",
+                                                border: "1px solid rgba(110,231,183,0.25)",
+                                            }}
+                                        />
+                                    )}
+                                </Stack>
+                                <Typography
+                                    sx={{
+                                        color: roleChipColor(w.role),
+                                        fontSize: "0.74rem",
+                                        textTransform: "capitalize",
+                                    }}
+                                >
+                                    {w.role}
+                                </Typography>
+                            </Box>
+
+                            <Stack direction="row" spacing={0.8} alignItems="center">
+                                {w.slug !== currentSlug && (
+                                    <Button href={`/workspace/${w.slug}`} sx={ghostButtonSx}>
+                                        Manage
+                                    </Button>
+                                )}
+                                <Button
+                                    onClick={() => openDashboard(w)}
+                                    disabled={busy}
+                                    sx={{
+                                        ...gradientButtonSx,
+                                        px: 1.8,
+                                        py: 0.6,
+                                        fontSize: "0.8rem",
+                                    }}
+                                >
+                                    {busy ? (
+                                        <CircularProgress size={15} sx={{ color: "#fff" }} />
+                                    ) : (
+                                        "Dashboard"
+                                    )}
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    );
+                })}
+
+                {workspaces.length === 0 && (
+                    <Typography sx={{ color: MUTED, fontSize: "0.88rem", py: 2 }}>
+                        You&apos;re not a member of any workspace yet.
+                    </Typography>
+                )}
+            </Stack>
+        </GlassCard>
     );
 }
 

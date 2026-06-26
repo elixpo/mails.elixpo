@@ -81,78 +81,82 @@ export default async function SettingsPage() {
                 description="Manage your workspace and review the identity synced from Elixpo Accounts."
             />
 
-            <Stack spacing={2.5} sx={{ maxWidth: 720 }}>
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(12, 1fr)" },
+                    gap: 2.5,
+                    alignItems: "start",
+                }}
+            >
                 {/* Workspace — editable */}
-                <GlassCard>
-                    <Typography sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}>
-                        Workspace
-                    </Typography>
-                    <Typography sx={{ color: TEXT_55, fontSize: "0.88rem", mb: 2.5 }}>
-                        Your business name across mail.elixpo. The workspace ID is a fixed internal
-                        identifier and can&rsquo;t be changed.
-                    </Typography>
+                <Box sx={{ gridColumn: { md: "span 7" } }}>
+                    <GlassCard>
+                        <Typography
+                            sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}
+                        >
+                            Workspace
+                        </Typography>
+                        <Typography sx={{ color: TEXT_55, fontSize: "0.88rem", mb: 2.5 }}>
+                            Your business name across mail.elixpo. The workspace ID is a fixed
+                            internal identifier and can&rsquo;t be changed.
+                        </Typography>
 
-                    <WorkspaceNameForm initialName={workspaceName} />
+                        <WorkspaceNameForm initialName={workspaceName} />
 
-                    <Box sx={{ mt: 2.5 }}>
-                        <ReadOnlyField label="Workspace ID" value={session.tenantId} mono />
-                    </Box>
-                </GlassCard>
+                        <Box sx={{ mt: 2.5 }}>
+                            <ReadOnlyField label="Workspace ID" value={session.tenantId} mono />
+                        </Box>
+                    </GlassCard>
+                </Box>
 
                 {/* Account identity — read-only from Accounts */}
-                <GlassCard>
-                    <Typography sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}>
-                        Account identity
-                    </Typography>
-                    <Typography sx={{ color: TEXT_55, fontSize: "0.88rem", mb: 2.5 }}>
-                        Read-only — synced from your Elixpo Accounts profile.
-                    </Typography>
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gap: 2,
-                            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                        }}
-                    >
-                        <ReadOnlyField label="Name" value={session.name || ""} />
-                        <ReadOnlyField label="Email" value={session.email} />
-                        <ReadOnlyField label="Account ID" value={session.uid} mono />
-                    </Box>
-                </GlassCard>
+                <Box sx={{ gridColumn: { md: "span 5" } }}>
+                    <GlassCard>
+                        <Typography
+                            sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}
+                        >
+                            Account identity
+                        </Typography>
+                        <Typography sx={{ color: TEXT_55, fontSize: "0.88rem", mb: 2.5 }}>
+                            Read-only — synced from your Elixpo Accounts profile.
+                        </Typography>
+                        <Stack spacing={2}>
+                            <ReadOnlyField label="Name" value={session.name || ""} />
+                            <ReadOnlyField label="Email" value={session.email} />
+                            <ReadOnlyField label="Account ID" value={session.uid} mono />
+                        </Stack>
+                    </GlassCard>
+                </Box>
 
                 {/* Connections — Google Drive for attachments */}
-                <DriveConnectionCard />
+                <Box sx={{ gridColumn: { md: "span 7" } }}>
+                    <DriveConnectionCard />
+                </Box>
 
                 {/* Team & access */}
-                <GlassCard>
-                    <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={2}
-                        alignItems={{ sm: "center" }}
-                        justifyContent="space-between"
-                    >
-                        <Box>
-                            <Typography
-                                sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}
-                            >
-                                Team &amp; access
-                            </Typography>
-                            <Typography sx={{ color: TEXT_55, fontSize: "0.88rem" }}>
-                                Invite people to this workspace, set roles (admin, writer, viewer),
-                                and approve join requests.
-                            </Typography>
-                        </Box>
+                <Box sx={{ gridColumn: { md: "span 5" } }}>
+                    <GlassCard>
+                        <Typography
+                            sx={{ fontWeight: 700, fontSize: "1.05rem", color: TEXT, mb: 0.4 }}
+                        >
+                            Team &amp; access
+                        </Typography>
+                        <Typography sx={{ color: TEXT_55, fontSize: "0.88rem", mb: 2 }}>
+                            Invite people to this workspace, set roles (admin, writer, viewer), and
+                            approve join requests.
+                        </Typography>
                         <Button
                             component={Link}
                             href="/workspace"
                             startIcon={<GroupsIcon sx={{ fontSize: "1.1rem !important" }} />}
-                            sx={{ ...PRIMARY_BTN, flexShrink: 0, whiteSpace: "nowrap" }}
+                            sx={{ ...PRIMARY_BTN, whiteSpace: "nowrap" }}
                         >
                             Manage workspace
                         </Button>
-                    </Stack>
-                </GlassCard>
-            </Stack>
+                    </GlassCard>
+                </Box>
+            </Box>
         </Box>
     );
 }
