@@ -4,23 +4,23 @@ import Link from "next/link";
 import type React from "react";
 import { GlassCard } from "./glass-card";
 
-const CORAL = "#ff7759";
-const TEXT = "#ffffff";
-const TEXT_55 = "rgba(255, 255, 255, 0.55)";
-const BORDER = "rgba(255, 255, 255, 0.08)";
+const CORAL = "var(--accent)";
+const TEXT = "var(--fg)";
+const TEXT_55 = "var(--fg-muted)";
+const BORDER = "var(--border)";
 
 export const PRIMARY_BTN = {
     textTransform: "none" as const,
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: "0.88rem",
-    color: "#17171c", // Dark text on white background
+    color: "var(--accent-contrast)",
     px: 2.8,
     py: 1,
     borderRadius: "32px", // Pill
-    background: "#ffffff",
+    background: "var(--accent)",
     boxShadow: "none",
     fontFamily: "var(--font-sans)",
-    "&:hover": { background: "#eeece7" },
+    "&:hover": { background: "var(--accent-2)" },
 };
 
 export const GHOST_BTN = {
@@ -31,10 +31,10 @@ export const GHOST_BTN = {
     px: 2.6,
     py: 1,
     borderRadius: "32px", // Pill
-    border: "1px solid rgba(255, 255, 255, 0.25)",
+    border: "1px solid var(--border)",
     background: "transparent",
     fontFamily: "var(--font-sans)",
-    "&:hover": { borderColor: "#ffffff", background: "rgba(255, 255, 255, 0.05)" },
+    "&:hover": { borderColor: "var(--accent-border)", background: "var(--accent-tint)" },
 };
 
 /** Page header: title + one-line description, optional right-aligned action. */

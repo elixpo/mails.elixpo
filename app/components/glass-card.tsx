@@ -1,20 +1,18 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { usePathname } from "next/navigation";
 import type React from "react";
 
-/** Surface tokens — solid, neutral, commercial. No gradients. */
-export const SURFACE_DARK = "#17171c"; // Near-Black Primary
-export const BORDER_DARK = "rgba(255,255,255,0.08)";
+/** Theme-aware surface tokens (resolve against the active data-theme). */
+export const SURFACE = "var(--surface)";
+export const BORDER = "var(--border)";
+export const SURFACE_DARK = "var(--surface)"; // compatibility exports
+export const BORDER_DARK = "var(--border)";
+export const SURFACE_LIGHT = "var(--surface)";
+export const BORDER_LIGHT = "var(--border)";
 
-export const SURFACE = SURFACE_DARK; // compatibility export
-export const BORDER = BORDER_DARK;   // compatibility export
-
-export const SURFACE_LIGHT = "#ffffff"; // Canvas White
-export const BORDER_LIGHT = "#d9d9dd"; // Hairline
-
-/** Frosted-glass surface card used across marketing and dashboard surfaces. */
+/** Surface card used across marketing and dashboard surfaces. Adapts to the
+ *  active theme via CSS variables. */
 export function GlassCard({
     children,
     sx,
@@ -22,18 +20,15 @@ export function GlassCard({
     children: React.ReactNode;
     sx?: any;
 }) {
-    const pathname = usePathname() || "";
-    const isDashboard = pathname.startsWith("/dashboard");
-
     return (
         <Box
             sx={{
-                background: isDashboard ? SURFACE_DARK : SURFACE_LIGHT,
-                border: `1px solid ${isDashboard ? BORDER_DARK : BORDER_LIGHT}`,
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
                 borderRadius: "16px", // md radius token
                 p: { xs: 2.5, md: 3 },
-                boxShadow: isDashboard ? "none" : "0 1px 2px rgba(0,0,0,0.03)",
-                color: isDashboard ? "#f5f5f4" : "#212121",
+                boxShadow: "var(--card-shadow)",
+                color: "var(--fg)",
                 ...sx,
             }}
         >

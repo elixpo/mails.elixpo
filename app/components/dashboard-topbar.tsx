@@ -37,17 +37,17 @@ interface WorkspaceOption {
     active: boolean;
 }
 
-const BORDER = "rgba(255,255,255,0.07)";
+const BORDER = "var(--border)";
 const ACCENT = "#ff7759";
 
 const MENU_ITEM_SX = {
     fontSize: "0.86rem",
     py: 1.0,
     gap: 1.3,
-    color: "#f5f5f4",
-    "&:hover": { background: "rgba(255,255,255,0.04)" },
+    color: "var(--fg)",
+    "&:hover": { background: "var(--overlay)" },
 } as const;
-const MENU_ICON_SX = { fontSize: 18, color: "rgba(245,245,244,0.55)" } as const;
+const MENU_ICON_SX = { fontSize: 18, color: "var(--fg-muted)" } as const;
 
 export interface DashboardUser {
     name: string;
@@ -83,7 +83,7 @@ function Brand() {
                 sx={{
                     fontWeight: 700,
                     fontSize: "1.02rem",
-                    color: "#f5f5f4",
+                    color: "var(--fg)",
                     letterSpacing: "-0.01em",
                     display: { xs: "none", sm: "block" },
                 }}
@@ -154,7 +154,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                     gap: { xs: 1, md: 2 },
                     px: { xs: 2, md: 3 },
                     borderBottom: `1px solid ${BORDER}`,
-                    background: "rgba(11,13,18,0.72)",
+                    background: "var(--topbar-bg)",
                     backdropFilter: "blur(20px)",
                 }}
             >
@@ -163,7 +163,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                     aria-label="Open menu"
                     sx={{
                         display: { xs: "inline-flex", md: "none" },
-                        color: "rgba(245,245,244,0.8)",
+                        color: "var(--fg-muted)",
                     }}
                 >
                     <MenuIcon />
@@ -190,7 +190,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                         gap: 1,
                         cursor: "pointer",
                         background: "transparent",
-                        border: `1px solid ${menuOpen ? "rgba(155,123,247,0.4)" : BORDER}`,
+                        border: `1px solid ${menuOpen ? "var(--accent)" : BORDER}`,
                         borderRadius: "10px",
                         pl: 0.6,
                         pr: { xs: 0.6, sm: 1 },
@@ -199,8 +199,8 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                         font: "inherit",
                         transition: "all 0.15s ease",
                         "&:hover": {
-                            borderColor: "rgba(155,123,247,0.4)",
-                            background: "rgba(155,123,247,0.06)",
+                            borderColor: "var(--accent)",
+                            background: "var(--accent-tint)",
                         },
                     }}
                 >
@@ -210,7 +210,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                             width: 28,
                             height: 28,
                             fontSize: "0.85rem",
-                            bgcolor: "rgba(155,123,247,0.4)",
+                            bgcolor: "var(--accent)",
                         }}
                     >
                         {initials(user)}
@@ -226,7 +226,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                             sx={{
                                 fontSize: "0.82rem",
                                 fontWeight: 600,
-                                color: "#f5f5f4",
+                                color: "var(--fg)",
                                 maxWidth: 150,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -238,7 +238,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                         <Typography
                             sx={{
                                 fontSize: "0.7rem",
-                                color: "rgba(245,245,244,0.45)",
+                                color: "var(--fg-faint)",
                                 maxWidth: 150,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -251,7 +251,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                     <KeyboardArrowDownIcon
                         sx={{
                             fontSize: 18,
-                            color: "rgba(245,245,244,0.5)",
+                            color: "var(--fg-muted)",
                             display: { xs: "none", sm: "block" },
                         }}
                     />
@@ -268,10 +268,10 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                             sx: {
                                 mt: 1,
                                 minWidth: 248,
-                                background: "#13161d",
+                                background: "var(--menu-surface)",
                                 border: `1px solid ${BORDER}`,
                                 borderRadius: "12px",
-                                color: "#f5f5f4",
+                                color: "var(--fg)",
                                 boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
                             },
                         },
@@ -286,7 +286,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     width: 38,
                                     height: 38,
                                     fontSize: "1rem",
-                                    bgcolor: "rgba(155,123,247,0.4)",
+                                    bgcolor: "var(--accent)",
                                 }}
                             >
                                 {initials(user)}
@@ -296,7 +296,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     sx={{
                                         fontSize: "0.9rem",
                                         fontWeight: 700,
-                                        color: "#f5f5f4",
+                                        color: "var(--fg)",
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
@@ -307,7 +307,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                 <Typography
                                     sx={{
                                         fontSize: "0.76rem",
-                                        color: "rgba(245,245,244,0.5)",
+                                        color: "var(--fg-muted)",
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
@@ -326,9 +326,9 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     fontSize: "0.66rem",
                                     fontWeight: 700,
                                     letterSpacing: "0.02em",
-                                    color: "#c4b5fd",
-                                    bgcolor: "rgba(155,123,247,0.12)",
-                                    border: "1px solid rgba(155,123,247,0.3)",
+                                    color: "var(--accent)",
+                                    bgcolor: "var(--accent-tint)",
+                                    border: "1px solid var(--accent-border)",
                                 }}
                             />
                             <Box sx={{ flexGrow: 1 }} />
@@ -338,7 +338,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     fontWeight: 700,
                                     letterSpacing: "0.06em",
                                     textTransform: "uppercase",
-                                    color: "rgba(245,245,244,0.35)",
+                                    color: "var(--fg-faint)",
                                 }}
                             >
                                 Workspace
@@ -347,7 +347,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                 sx={{
                                     fontFamily: "var(--font-geist-mono)",
                                     fontSize: "0.68rem",
-                                    color: "rgba(245,245,244,0.55)",
+                                    color: "var(--fg-muted)",
                                     maxWidth: 110,
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -372,7 +372,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     fontWeight: 700,
                                     letterSpacing: "0.06em",
                                     textTransform: "uppercase",
-                                    color: "rgba(245,245,244,0.35)",
+                                    color: "var(--fg-faint)",
                                 }}
                             >
                                 Switch workspace
@@ -395,7 +395,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                         <Typography
                                             sx={{
                                                 fontSize: "0.84rem",
-                                                color: "#f5f5f4",
+                                                color: "var(--fg)",
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
@@ -406,7 +406,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                         <Typography
                                             sx={{
                                                 fontSize: "0.66rem",
-                                                color: "rgba(245,245,244,0.4)",
+                                                color: "var(--fg-faint)",
                                                 textTransform: "capitalize",
                                             }}
                                         >
@@ -496,8 +496,8 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                             fontSize: "0.86rem",
                             py: 1.0,
                             gap: 1.3,
-                            color: "#fca5a5",
-                            "&:hover": { background: "rgba(239,68,68,0.08)", color: "#fecaca" },
+                            color: "var(--danger)",
+                            "&:hover": { background: "rgba(239,68,68,0.08)", color: "var(--danger)" },
                         }}
                     >
                         <LogoutIcon sx={{ fontSize: 18 }} />
@@ -518,9 +518,9 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                         width: 264,
                         px: 1.5,
                         py: 2,
-                        background: "#0d1016",
+                        background: "var(--drawer-bg)",
                         borderRight: `1px solid ${BORDER}`,
-                        color: "#f5f5f4",
+                        color: "var(--fg)",
                     },
                 }}
             >
@@ -533,7 +533,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                     <Brand />
                     <IconButton
                         onClick={() => setMobileOpen(false)}
-                        sx={{ color: "rgba(245,245,244,0.6)" }}
+                        sx={{ color: "var(--fg-muted)" }}
                         aria-label="Close menu"
                     >
                         <CloseIcon />

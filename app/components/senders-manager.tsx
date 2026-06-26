@@ -45,12 +45,12 @@ import { BORDER, GlassCard, SURFACE } from "./glass-card";
 import { useRole } from "./role-provider";
 
 // ── Palette ─────────────────────────────────────────────────────────────────
-const ACCENT = "#9b7bf7";
-const GREEN = "#86efac";
-const RED = "#fca5a5";
-const TEXT = "#f5f5f4";
-const TEXT_55 = "rgba(245,245,244,0.55)";
-const TEXT_40 = "rgba(245,245,244,0.4)";
+const ACCENT = "var(--accent)";
+const GREEN = "var(--success)";
+const RED = "var(--danger)";
+const TEXT = "var(--fg)";
+const TEXT_55 = "var(--fg-muted)";
+const TEXT_40 = "var(--fg-faint)";
 
 const GMAIL_HELP = "https://support.google.com/accounts/answer/185833";
 const SEND_AS_HELP = "https://support.google.com/mail/answer/22370";
@@ -111,17 +111,17 @@ const darkField = {
     "& .MuiOutlinedInput-root": {
         color: TEXT,
         borderRadius: "10px",
-        background: "rgba(255,255,255,0.02)",
-        "& fieldset": { borderColor: "rgba(255,255,255,0.12)" },
-        "&:hover fieldset": { borderColor: "rgba(155,123,247,0.4)" },
+        background: "var(--field-bg)",
+        "& fieldset": { borderColor: "var(--field-border)" },
+        "&:hover fieldset": { borderColor: "var(--accent-border)" },
         "&.Mui-focused fieldset": { borderColor: ACCENT },
-        "&.Mui-disabled fieldset": { borderColor: "rgba(255,255,255,0.07)" },
+        "&.Mui-disabled fieldset": { borderColor: "var(--border)" },
     },
     "& .MuiInputBase-input": { fontSize: "0.92rem", py: 1.05 },
     "& .MuiInputBase-input.Mui-disabled": {
         WebkitTextFillColor: TEXT_40,
     },
-    "& .MuiInputBase-input::placeholder": { color: "rgba(245,245,244,0.35)", opacity: 1 },
+    "& .MuiInputBase-input::placeholder": { color: "var(--fg-faint)", opacity: 1 },
     "& .MuiInputAdornment-root .MuiSvgIcon-root": { color: TEXT_40 },
 };
 
@@ -155,9 +155,9 @@ function ReadOnlyChip() {
             label="Read-only access"
             size="small"
             sx={{
-                color: "rgba(245,245,244,0.5)",
-                bgcolor: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                color: "var(--fg-muted)",
+                bgcolor: "var(--overlay)",
+                border: "1px solid var(--border)",
             }}
         />
     );
@@ -176,7 +176,7 @@ function StatusChip({ status }: { status: string }) {
                 fontWeight: 700,
                 letterSpacing: "0.02em",
                 color: active ? GREEN : TEXT_55,
-                bgcolor: active ? "rgba(134,239,172,0.1)" : "rgba(255,255,255,0.05)",
+                bgcolor: active ? "rgba(134,239,172,0.1)" : "var(--overlay)",
                 border: `1px solid ${active ? "rgba(134,239,172,0.28)" : BORDER}`,
             }}
         />
@@ -195,8 +195,8 @@ function DefaultChip() {
                 fontWeight: 700,
                 letterSpacing: "0.02em",
                 color: ACCENT,
-                bgcolor: "rgba(155,123,247,0.1)",
-                border: "1px solid rgba(155,123,247,0.28)",
+                bgcolor: "var(--accent-tint)",
+                border: "1px solid var(--accent-border)",
             }}
         />
     );
@@ -217,7 +217,7 @@ function GmailHint() {
         >
             <InfoOutlinedIcon sx={{ fontSize: 18, color: "#5fb6ff", flexShrink: 0, mt: 0.2 }} />
             <Typography
-                sx={{ fontSize: "0.8rem", color: "rgba(245,245,244,0.7)", lineHeight: 1.6 }}
+                sx={{ fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.6 }}
             >
                 For Gmail you need 2-Step Verification enabled, then a 16-character{" "}
                 <MuiLink
@@ -528,12 +528,12 @@ function SenderDialog({
                                         sx={{
                                             color: TEXT,
                                             borderRadius: "10px",
-                                            background: "rgba(255,255,255,0.02)",
+                                            background: "var(--field-bg)",
                                             "& .MuiOutlinedInput-notchedOutline": {
-                                                borderColor: "rgba(255,255,255,0.12)",
+                                                borderColor: "var(--field-border)",
                                             },
                                             "&:hover .MuiOutlinedInput-notchedOutline": {
-                                                borderColor: "rgba(155,123,247,0.4)",
+                                                borderColor: "var(--accent-border)",
                                             },
                                             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                                                 borderColor: ACCENT,
@@ -556,7 +556,7 @@ function SenderDialog({
                                                             fontSize: "0.9rem",
                                                         },
                                                         "& .MuiMenuItem-root.Mui-selected": {
-                                                            background: "rgba(155,123,247,0.12)",
+                                                            background: "var(--accent-tint)",
                                                         },
                                                     },
                                                 },

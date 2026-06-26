@@ -78,7 +78,7 @@ export function DashboardNavLinks({
                             transition: "all 0.15s ease",
                             "&:hover": {
                                 color: "#ffffff",
-                                background: active ? "rgba(255, 119, 89, 0.15)" : "rgba(255,255,255,0.04)",
+                                background: active ? "rgba(255, 119, 89, 0.15)" : "var(--overlay)",
                             },
                         }}
                     >

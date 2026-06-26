@@ -25,8 +25,8 @@ import { openDrivePicker } from "./drive-picker";
 import { BORDER, SURFACE } from "./glass-card";
 import { useRole } from "./role-provider";
 
-const ACCENT = "#9b7bf7";
-const TEXT_55 = "rgba(245,245,244,0.55)";
+const ACCENT = "var(--accent)";
+const TEXT_55 = "var(--fg-muted)";
 
 export interface Attachment {
     id?: string;
