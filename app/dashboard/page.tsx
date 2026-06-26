@@ -23,9 +23,9 @@ import { listTemplates } from "@/lib/templates";
 import { listWebhooks } from "@/lib/webhooks";
 
 const ACCENT = "#ff7759";
-const TEXT = "#ffffff";
-const TEXT_55 = "rgba(255, 255, 255, 0.55)";
-const BORDER = "rgba(255, 255, 255, 0.08)";
+const TEXT = "var(--fg)";
+const TEXT_55 = "var(--fg-muted)";
+const BORDER = "var(--border)";
 
 interface Snapshot {
     senders: number;
@@ -179,7 +179,7 @@ export default async function OverviewPage() {
                     </Typography>
                 </Box>
                 <Stack spacing={0.6} alignItems={{ xs: "flex-start", sm: "flex-end" }}>
-                    <Typography sx={{ fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(245,245,244,0.4)", fontWeight: 700 }}>
+                    <Typography sx={{ fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--fg-faint)", fontWeight: 700 }}>
                         Tenant
                     </Typography>
                     <Chip
@@ -275,7 +275,7 @@ export default async function OverviewPage() {
                                     p: 1.8,
                                     borderRadius: "12px",
                                     border: `1px solid ${step.done ? "rgba(52,211,153,0.22)" : BORDER}`,
-                                    background: step.done ? "rgba(52,211,153,0.05)" : "rgba(255,255,255,0.015)",
+                                    background: step.done ? "rgba(52,211,153,0.05)" : "var(--overlay)",
                                     flexDirection: { xs: "column", sm: "row" },
                                 }}
                             >
@@ -306,7 +306,7 @@ export default async function OverviewPage() {
                                             placeItems: "center",
                                             fontSize: "0.66rem",
                                             fontWeight: 800,
-                                            color: "#0b0d12",
+                                            color: "var(--bg)",
                                             background: step.done ? "#34d399" : step.accent,
                                         }}
                                     >
@@ -336,7 +336,7 @@ export default async function OverviewPage() {
                                         borderRadius: "10px",
                                         border: `1px solid ${step.done ? "rgba(52,211,153,0.3)" : BORDER}`,
                                         whiteSpace: "nowrap",
-                                        "&:hover": { borderColor: "#ffffff", background: "rgba(255,255,255,0.05)" },
+                                        "&:hover": { borderColor: "var(--accent-border)", background: "var(--overlay)" },
                                     }}
                                 >
                                     {step.done ? "Manage" : step.cta}
@@ -377,7 +377,7 @@ export default async function OverviewPage() {
                                             {d.template || "—"} · {d.status}
                                         </Typography>
                                     </Box>
-                                    <Typography sx={{ color: "rgba(245,245,244,0.4)", fontSize: "0.74rem", flexShrink: 0 }}>
+                                    <Typography sx={{ color: "var(--fg-faint)", fontSize: "0.74rem", flexShrink: 0 }}>
                                         {relativeTime(d.queued_at)}
                                     </Typography>
                                 </Stack>
@@ -392,8 +392,8 @@ export default async function OverviewPage() {
                                     borderRadius: "16px",
                                     display: "grid",
                                     placeItems: "center",
-                                    color: "rgba(245,245,244,0.4)",
-                                    background: "rgba(255,255,255,0.03)",
+                                    color: "var(--fg-faint)",
+                                    background: "var(--overlay)",
                                     border: `1px solid ${BORDER}`,
                                 }}
                             >

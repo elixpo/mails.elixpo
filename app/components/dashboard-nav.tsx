@@ -72,17 +72,17 @@ export function DashboardNavLinks({
                             fontSize: horizontal ? "0.86rem" : "0.9rem",
                             fontWeight: active ? 600 : 500,
                             whiteSpace: "nowrap",
-                            color: active ? "#ffffff" : "rgba(255,255,255,0.65)",
-                            background: active ? "rgba(255, 119, 89, 0.12)" : "transparent",
-                            border: `1px solid ${active ? "rgba(255, 119, 89, 0.25)" : "transparent"}`,
+                            color: active ? "var(--accent)" : "var(--fg-muted)",
+                            background: active ? "var(--accent-tint)" : "transparent",
+                            border: `1px solid ${active ? "var(--accent-border)" : "transparent"}`,
                             transition: "all 0.15s ease",
                             "&:hover": {
-                                color: "#ffffff",
-                                background: active ? "rgba(255, 119, 89, 0.15)" : "var(--overlay)",
+                                color: active ? "var(--accent)" : "var(--fg)",
+                                background: active ? "var(--accent-tint-strong)" : "var(--overlay)",
                             },
                         }}
                     >
-                        <Icon sx={{ fontSize: 19, color: active ? ACCENT : "rgba(255,255,255,0.55)" }} />
+                        <Icon sx={{ fontSize: 19, color: active ? ACCENT : "var(--fg-muted)" }} />
                         {item.label}
                     </Box>
                 );

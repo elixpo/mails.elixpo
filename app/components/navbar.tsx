@@ -77,45 +77,36 @@ const Navbar = () => {
     const pathname = usePathname() || "";
     const isDashboard = pathname.startsWith("/dashboard");
 
-    // Cohere-style variables based on route context
-    const navBg = isDashboard ? "rgba(11, 13, 18, 0.72)" : "rgba(255, 255, 255, 0.85)";
-    const navBorder = isDashboard ? "1px solid rgba(255,255,255,0.07)" : "1px solid var(--border-light)";
-    const textColor = isDashboard ? "#f4f4f6" : "#000000";
-    const brandColor = isDashboard ? "#f4f4f6" : "#000000";
-    const linkColor = isDashboard ? "rgba(244,244,246,0.7)" : "rgba(33, 33, 33, 0.65)";
-    const linkHoverBg = isDashboard ? "rgba(255,255,255,0.05)" : "rgba(0, 0, 0, 0.04)";
-    const linkHoverColor = isDashboard ? "#fff" : "#000000";
-    const githubBorder = isDashboard ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)";
-    const githubTextColor = isDashboard ? "rgba(244,244,246,0.8)" : "#212121";
-    const githubHoverBg = isDashboard ? "var(--accent-tint)" : "rgba(0, 0, 0, 0.03)";
-    const githubHoverBorder = isDashboard ? "var(--accent-border)" : "#000000";
-    
-    // Primary CTA (Sign In) style: Cohere Black pill for public, purple gradient/accent for dashboard/custom
-    const ctaStyles = isDashboard
-        ? {
-              background: "var(--accent-gradient)",
-              borderRadius: "10px",
-              boxShadow: "0 4px 14px var(--accent-shadow)",
-              "&:hover": {
-                  background: "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)",
-                  boxShadow: "0 6px 20px var(--accent-border)",
-              },
-          }
-        : {
-              background: "#17171c",
-              color: "#ffffff",
-              borderRadius: "32px", // Pill!
-              px: 2.5,
-              py: 0.9,
-              fontSize: "0.88rem",
-              fontWeight: 500,
-              fontFamily: "var(--font-sans)",
-              textTransform: "none",
-              transition: "background 0.2s ease",
-              "&:hover": {
-                  background: "#000000",
-              },
-          };
+    // Theme-driven colors (adapt to light/dark via CSS vars).
+    const navBg = "var(--topbar-bg)";
+    const navBorder = "1px solid var(--border)";
+    const textColor = "var(--fg)";
+    const brandColor = "var(--fg)";
+    const linkColor = "var(--fg-muted)";
+    const linkHoverBg = "var(--overlay)";
+    const linkHoverColor = "var(--fg)";
+    const githubBorder = "var(--border)";
+    const githubTextColor = "var(--fg-muted)";
+    const githubHoverBg = "var(--accent-tint)";
+    const githubHoverBorder = "var(--accent-border)";
+
+    // Primary CTA (Sign In) — coral pill, readable in both themes.
+    const ctaStyles = {
+        background: "var(--accent)",
+        color: "var(--accent-contrast)",
+        borderRadius: "32px", // Pill
+        px: 2.5,
+        py: 0.9,
+        fontSize: "0.88rem",
+        fontWeight: 600,
+        fontFamily: "var(--font-sans)",
+        textTransform: "none" as const,
+        boxShadow: "none",
+        transition: "background 0.2s ease",
+        "&:hover": {
+            background: "var(--accent-2)",
+        },
+    };
 
     return (
         <AppBar
@@ -340,7 +331,7 @@ const Navbar = () => {
                         width: 282,
                         background: isDashboard ? "#0d1016" : "#ffffff",
                         borderLeft: isDashboard ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e5e7eb",
-                        color: isDashboard ? "#f5f5f4" : "#212121",
+                        color: "var(--fg)",
                         p: 2,
                     },
                 }}

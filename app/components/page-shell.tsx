@@ -21,7 +21,7 @@ export default function PageShell({
     const isDashboard = pathname.startsWith("/dashboard");
 
     return (
-        <Box sx={{ position: "relative", minHeight: "100vh", color: isDashboard ? "#f5f5f4" : "#212121" }}>
+        <Box sx={{ position: "relative", minHeight: "100vh", color: "var(--fg)" }}>
             <Box sx={{ position: "sticky", top: 0, zIndex: 1000 }}>
                 <Navbar />
             </Box>

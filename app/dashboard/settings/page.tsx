@@ -12,9 +12,9 @@ import DriveConnectionCard from "../../components/drive-connection-card";
 import { GlassCard } from "../../components/glass-card";
 import WorkspaceNameForm from "../../components/workspace-name-form";
 
-const TEXT = "#f5f5f4";
-const TEXT_55 = "rgba(245,245,244,0.55)";
-const BORDER = "rgba(255,255,255,0.07)";
+const TEXT = "var(--fg)";
+const TEXT_55 = "var(--fg-muted)";
+const BORDER = "var(--border)";
 
 function ReadOnlyField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
     return (
@@ -25,7 +25,7 @@ function ReadOnlyField({ label, value, mono }: { label: string; value: string; m
                     fontWeight: 700,
                     letterSpacing: "0.04em",
                     textTransform: "uppercase",
-                    color: "rgba(245,245,244,0.4)",
+                    color: "var(--fg-faint)",
                     mb: 0.7,
                 }}
             >
@@ -41,13 +41,13 @@ function ReadOnlyField({ label, value, mono }: { label: string; value: string; m
                     py: 1.15,
                     borderRadius: "10px",
                     border: `1px solid ${BORDER}`,
-                    background: "rgba(255,255,255,0.02)",
+                    background: "var(--field-bg)",
                 }}
             >
                 <Typography
                     sx={{
                         fontSize: "0.92rem",
-                        color: value ? "rgba(245,245,244,0.85)" : "rgba(245,245,244,0.4)",
+                        color: value ? "var(--fg)" : "var(--fg-faint)",
                         fontFamily: mono ? "var(--font-geist-mono)" : undefined,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -56,7 +56,7 @@ function ReadOnlyField({ label, value, mono }: { label: string; value: string; m
                 >
                     {value || "—"}
                 </Typography>
-                <LockIcon sx={{ fontSize: 15, color: "rgba(245,245,244,0.3)", flexShrink: 0 }} />
+                <LockIcon sx={{ fontSize: 15, color: "var(--fg-faint)", flexShrink: 0 }} />
             </Box>
         </Box>
     );
