@@ -493,7 +493,12 @@ function YourWorkspacesCard({
                                 <Button
                                     onClick={() => openDashboard(w)}
                                     disabled={busy}
-                                    sx={{ ...gradientButtonSx, px: 1.8, py: 0.6, fontSize: "0.8rem" }}
+                                    sx={{
+                                        ...gradientButtonSx,
+                                        px: 1.8,
+                                        py: 0.6,
+                                        fontSize: "0.8rem",
+                                    }}
                                 >
                                     {busy ? (
                                         <CircularProgress size={15} sx={{ color: "#fff" }} />
