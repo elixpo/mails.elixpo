@@ -288,10 +288,7 @@ export default function Home() {
                                     "linear-gradient(to right, transparent, var(--accent-border) 12%, var(--accent-border) 88%, transparent)",
                             }}
                         />
-                        <Stack
-                            direction={{ xs: "column", md: "row" }}
-                            spacing={{ xs: 4.5, md: 4 }}
-                        >
+                        <Stack direction={{ xs: "column", md: "row" }} spacing={{ xs: 4.5, md: 4 }}>
                             {STEPS.map((s, i) => (
                                 <Box
                                     key={s.title}
@@ -471,11 +468,7 @@ export default function Home() {
                     </Box>
 
                     {/* Built-on chip: lixeditor dependency */}
-                    <Stack
-                        direction="row"
-                        justifyContent="center"
-                        sx={{ mt: { xs: 5, md: 7 } }}
-                    >
+                    <Stack direction="row" justifyContent="center" sx={{ mt: { xs: 5, md: 7 } }}>
                         <Stack
                             component="a"
                             href="https://www.npmjs.com/package/@elixpo/lixeditor"
