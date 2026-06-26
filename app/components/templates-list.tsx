@@ -411,7 +411,7 @@ export default function TemplatesList() {
                                             {deleting === t.id ? (
                                                 <CircularProgress
                                                     size={16}
-                                                    sx={{ color: "rgba(245,245,244,0.5)" }}
+                                                    sx={{ color: "var(--fg-muted)" }}
                                                 />
                                             ) : (
                                                 <DeleteOutlineIcon sx={{ fontSize: 19 }} />

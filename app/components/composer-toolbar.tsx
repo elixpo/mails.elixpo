@@ -23,7 +23,7 @@ import {
 } from "@mui/material";
 import { useRef, useState } from "react";
 
-const ACCENT = "#9b7bf7";
+const ACCENT = "var(--accent)";
 
 /**
  * Gmail-style formatting bar at the foot of the editor. Drives the underlying
@@ -109,10 +109,10 @@ export default function ComposerToolbar({
     }
 
     const btn = {
-        color: "rgba(245,245,244,0.72)",
+        color: "var(--fg-muted)",
         borderRadius: "8px",
         p: 0.7,
-        "&:hover": { color: "#f5f5f4", background: "rgba(155,123,247,0.12)" },
+        "&:hover": { color: "var(--fg)", background: "var(--accent-tint)" },
     };
 
     return (
@@ -123,8 +123,8 @@ export default function ComposerToolbar({
             sx={{
                 px: 1.5,
                 py: 0.8,
-                borderTop: "1px solid rgba(255,255,255,0.07)",
-                background: "rgba(255,255,255,0.015)",
+                borderTop: "1px solid var(--border)",
+                background: "var(--overlay)",
                 flexWrap: "wrap",
                 rowGap: 0.5,
             }}

@@ -606,14 +606,14 @@ function SenderDialog({
                         ...PRIMARY_BTN,
                         minWidth: 130,
                         "&.Mui-disabled": {
-                            background: "rgba(255,255,255,0.06)",
-                            color: "rgba(245,245,244,0.35)",
+                            background: "var(--overlay)",
+                            color: "var(--fg-faint)",
                             boxShadow: "none",
                         },
                     }}
                 >
                     {saving ? (
-                        <CircularProgress size={18} sx={{ color: "rgba(245,245,244,0.6)" }} />
+                        <CircularProgress size={18} sx={{ color: "var(--fg-muted)" }} />
                     ) : isEdit ? (
                         "Save changes"
                     ) : (
@@ -712,14 +712,14 @@ function DeleteDialog({
                             background: "linear-gradient(135deg, #fca5a5 0%, #f87171 100%)",
                         },
                         "&.Mui-disabled": {
-                            background: "rgba(255,255,255,0.06)",
-                            color: "rgba(245,245,244,0.35)",
+                            background: "var(--overlay)",
+                            color: "var(--fg-faint)",
                             boxShadow: "none",
                         },
                     }}
                 >
                     {busy ? (
-                        <CircularProgress size={18} sx={{ color: "rgba(245,245,244,0.6)" }} />
+                        <CircularProgress size={18} sx={{ color: "var(--fg-muted)" }} />
                     ) : (
                         "Remove"
                     )}
@@ -825,7 +825,7 @@ function AliasesSection({
                         sx={{
                             color: ACCENT,
                             fontWeight: 600,
-                            textDecorationColor: "rgba(155,123,247,0.4)",
+                            textDecorationColor: "var(--accent-border)",
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 0.3,
@@ -874,7 +874,7 @@ function AliasesSection({
                                             px: 1.4,
                                             py: 0.9,
                                             borderRadius: "9px",
-                                            background: "rgba(255,255,255,0.02)",
+                                            background: "var(--field-bg)",
                                             border: `1px solid ${BORDER}`,
                                         }}
                                     >
@@ -959,7 +959,7 @@ function AliasesSection({
                                                             color: TEXT_55,
                                                             "&:hover": {
                                                                 background:
-                                                                    "rgba(255,255,255,0.05)",
+                                                                    "var(--overlay)",
                                                             },
                                                         }}
                                                     >
@@ -1046,7 +1046,7 @@ function AliasesSection({
                                         px: 2,
                                         whiteSpace: "nowrap",
                                         "&.Mui-disabled": {
-                                            color: "rgba(245,245,244,0.4)",
+                                            color: "var(--fg-faint)",
                                             borderColor: BORDER,
                                         },
                                     }}
@@ -1054,7 +1054,7 @@ function AliasesSection({
                                     {saving ? (
                                         <CircularProgress
                                             size={16}
-                                            sx={{ color: "rgba(245,245,244,0.6)" }}
+                                            sx={{ color: "var(--fg-muted)" }}
                                         />
                                     ) : (
                                         "Add alias"
@@ -1268,13 +1268,13 @@ function SenderCard({
                                 sx={{
                                     color: TEXT,
                                     borderRadius: "11px",
-                                    background: "rgba(255,255,255,0.02)",
+                                    background: "var(--field-bg)",
                                     maxWidth: 200,
                                     "& .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: "rgba(255,255,255,0.16)",
+                                        borderColor: "var(--field-border)",
                                     },
                                     "&:hover .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: "rgba(155,123,247,0.5)",
+                                        borderColor: "var(--accent-border)",
                                     },
                                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                                         borderColor: ACCENT,
@@ -1300,7 +1300,7 @@ function SenderCard({
                                                     fontSize: "0.84rem",
                                                 },
                                                 "& .MuiMenuItem-root.Mui-selected": {
-                                                    background: "rgba(155,123,247,0.12)",
+                                                    background: "var(--accent-tint)",
                                                 },
                                             },
                                         },
@@ -1342,7 +1342,7 @@ function SenderCard({
                                             test?.phase === "loading" ? (
                                                 <CircularProgress
                                                     size={15}
-                                                    sx={{ color: "rgba(245,245,244,0.6)" }}
+                                                    sx={{ color: "var(--fg-muted)" }}
                                                 />
                                             ) : (
                                                 <SendIcon sx={{ fontSize: "1rem !important" }} />
@@ -1352,7 +1352,7 @@ function SenderCard({
                                             ...GHOST_BTN,
                                             fontSize: "0.84rem",
                                             "&.Mui-disabled": {
-                                                color: "rgba(245,245,244,0.4)",
+                                                color: "var(--fg-faint)",
                                                 borderColor: BORDER,
                                             },
                                         }}
@@ -1367,11 +1367,11 @@ function SenderCard({
                                 size="small"
                                 sx={{
                                     color: TEXT_55,
-                                    border: "1px solid rgba(255,255,255,0.16)",
+                                    border: "1px solid var(--field-border)",
                                     borderRadius: "10px",
                                     "&:hover": {
-                                        borderColor: "rgba(155,123,247,0.5)",
-                                        background: "rgba(155,123,247,0.06)",
+                                        borderColor: "var(--accent-border)",
+                                        background: "var(--accent-tint)",
                                     },
                                 }}
                                 aria-label="More actions"

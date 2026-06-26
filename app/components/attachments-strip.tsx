@@ -39,11 +39,11 @@ export interface Attachment {
 
 const darkField = {
     "& .MuiOutlinedInput-root": {
-        color: "#f5f5f4",
+        color: "var(--fg)",
         borderRadius: "10px",
-        background: "rgba(255,255,255,0.02)",
-        "& fieldset": { borderColor: "rgba(255,255,255,0.12)" },
-        "&:hover fieldset": { borderColor: "rgba(155,123,247,0.4)" },
+        background: "var(--field-bg)",
+        "& fieldset": { borderColor: "var(--field-border)" },
+        "&:hover fieldset": { borderColor: "var(--accent-border)" },
         "&.Mui-focused fieldset": { borderColor: ACCENT },
     },
     "& .MuiInputBase-input": { fontSize: "0.9rem" },
@@ -124,7 +124,7 @@ export default function AttachmentsStrip({
     }
 
     return (
-        <Box sx={{ px: 1.5, py: 1, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <Box sx={{ px: 1.5, py: 1, borderTop: "1px solid var(--border)" }}>
             <Stack direction="row" alignItems="center" sx={{ flexWrap: "wrap", gap: 0.8 }}>
                 {canWrite && (
                     <Button
@@ -153,14 +153,14 @@ export default function AttachmentsStrip({
                                     <LinkIcon
                                         sx={{
                                             fontSize: 15,
-                                            color: "rgba(245,245,244,0.6) !important",
+                                            color: "var(--fg-muted) !important",
                                         }}
                                     />
                                 ) : (
                                     <InsertDriveFileIcon
                                         sx={{
                                             fontSize: 15,
-                                            color: "rgba(245,245,244,0.6) !important",
+                                            color: "var(--fg-muted) !important",
                                         }}
                                     />
                                 )
