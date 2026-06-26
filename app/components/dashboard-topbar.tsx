@@ -179,6 +179,8 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
 
                 <Box sx={{ flexGrow: 1 }} />
 
+                <ThemeToggle />
+
                 {/* Profile menu */}
                 <Box
                     component="button"

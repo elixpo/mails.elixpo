@@ -41,9 +41,9 @@ import { EmptyState, GHOST_BTN, PRIMARY_BTN } from "./dashboard-ui";
 import { BORDER, GlassCard, SURFACE } from "./glass-card";
 import { useRole } from "./role-provider";
 
-const ACCENT = "#9b7bf7";
-const TEXT = "#f5f5f4";
-const TEXT_55 = "rgba(245,245,244,0.55)";
+const ACCENT = "var(--accent)";
+const TEXT = "var(--fg)";
+const TEXT_55 = "var(--fg-muted)";
 
 interface Product {
     id: string;

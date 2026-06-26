@@ -177,15 +177,15 @@ export default function AttachmentsStrip({
                                 maxWidth: 240,
                                 height: 26,
                                 fontSize: "0.74rem",
-                                color: "#e7e5e4",
+                                color: "var(--fg)",
                                 bgcolor:
                                     a.kind === "variable"
-                                        ? "rgba(155,123,247,0.12)"
-                                        : "rgba(255,255,255,0.05)",
-                                border: `1px solid ${a.kind === "variable" ? "rgba(155,123,247,0.3)" : BORDER}`,
+                                        ? "var(--accent-tint)"
+                                        : "var(--overlay)",
+                                border: `1px solid ${a.kind === "variable" ? "var(--accent-border)" : BORDER}`,
                                 "& .MuiChip-deleteIcon": {
-                                    color: "rgba(245,245,244,0.5)",
-                                    "&:hover": { color: "#f87171" },
+                                    color: "var(--fg-muted)",
+                                    "&:hover": { color: "var(--danger)" },
                                 },
                             }}
                         />
@@ -204,7 +204,7 @@ export default function AttachmentsStrip({
                             border: `1px solid ${BORDER}`,
                             backgroundImage: "none",
                             "& .MuiMenuItem-root": {
-                                color: "#f5f5f4",
+                                color: "var(--fg)",
                                 fontSize: "0.85rem",
                                 gap: 1,
                             },
@@ -268,7 +268,7 @@ function UrlDialog({
     const valid = /^https?:\/\//i.test(url.trim());
     return (
         <Dialog open onClose={onClose} slotProps={{ paper: dialogPaper }}>
-            <DialogTitle sx={{ color: "#f5f5f4", fontWeight: 800 }}>Attach from a URL</DialogTitle>
+            <DialogTitle sx={{ color: "var(--fg)", fontWeight: 800 }}>Attach from a URL</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} sx={{ mt: 0.5 }}>
                     <TextField
@@ -315,7 +315,7 @@ function VariableDialog({
     const clean = varName.trim().replace(/[^a-zA-Z0-9_.]/g, "");
     return (
         <Dialog open onClose={onClose} slotProps={{ paper: dialogPaper }}>
-            <DialogTitle sx={{ color: "#f5f5f4", fontWeight: 800 }}>
+            <DialogTitle sx={{ color: "var(--fg)", fontWeight: 800 }}>
                 Variable attachment
             </DialogTitle>
             <DialogContent>
@@ -333,7 +333,7 @@ function VariableDialog({
                         sx={darkField}
                         placeholder="invoice_url"
                         helperText={clean ? `Resolves {{${clean}}} at send` : "variable name"}
-                        FormHelperTextProps={{ sx: { color: "rgba(245,245,244,0.4)" } }}
+                        FormHelperTextProps={{ sx: { color: "var(--fg-faint)" } }}
                     />
                     <TextField
                         value={filename}

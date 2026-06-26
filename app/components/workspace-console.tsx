@@ -87,24 +87,24 @@ interface Msg {
 /* Styling constants                                                   */
 /* ------------------------------------------------------------------ */
 
-const TEXT = "#f5f5f4";
-const MUTED = "rgba(245,245,244,0.55)";
-const BORDER = "rgba(255,255,255,0.07)";
-const ACCENT = "#9b7bf7";
-const ACCENT_GRADIENT = "linear-gradient(135deg, #9b7bf7 0%, #7c5cff 100%)";
-const ACCENT_GRADIENT_HOVER = "linear-gradient(135deg, #b094ff 0%, #8a6dff 100%)";
+const TEXT = "var(--fg)";
+const MUTED = "var(--fg-muted)";
+const BORDER = "var(--border)";
+const ACCENT = "var(--accent)";
+const ACCENT_GRADIENT = "var(--accent-gradient)";
+const ACCENT_GRADIENT_HOVER = "var(--accent-gradient-hover)";
 
 const fieldSx = {
     "& .MuiOutlinedInput-root": {
         color: TEXT,
         borderRadius: "10px",
-        background: "rgba(255,255,255,0.02)",
-        "& fieldset": { borderColor: "rgba(255,255,255,0.12)" },
-        "&:hover fieldset": { borderColor: "rgba(155,123,247,0.4)" },
+        background: "var(--field-bg)",
+        "& fieldset": { borderColor: "var(--field-border)" },
+        "&:hover fieldset": { borderColor: "var(--accent-border)" },
         "&.Mui-focused fieldset": { borderColor: ACCENT },
     },
     "& .MuiInputBase-input": { fontSize: "0.95rem", py: 1.1 },
-    "& .MuiInputBase-input::placeholder": { color: "rgba(245,245,244,0.35)", opacity: 1 },
+    "& .MuiInputBase-input::placeholder": { color: "var(--fg-faint)", opacity: 1 },
     "& .MuiInputLabel-root": { color: MUTED },
     "& .MuiInputLabel-root.Mui-focused": { color: ACCENT },
     "& textarea": { color: TEXT },
@@ -113,9 +113,9 @@ const fieldSx = {
 const selectSx = {
     color: TEXT,
     borderRadius: "10px",
-    background: "rgba(255,255,255,0.02)",
-    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
-    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(155,123,247,0.4)" },
+    background: "var(--field-bg)",
+    "& .MuiOutlinedInput-notchedOutline": { borderColor: "var(--field-border)" },
+    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "var(--accent-border)" },
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: ACCENT },
     "& .MuiSvgIcon-root": { color: MUTED },
 } as const;
@@ -123,11 +123,11 @@ const selectSx = {
 const selectMenuProps = {
     PaperProps: {
         sx: {
-            background: "#13161d",
+            background: "var(--menu-surface)",
             color: TEXT,
             border: `1px solid ${BORDER}`,
-            "& .MuiMenuItem-root:hover": { background: "rgba(155,123,247,0.12)" },
-            "& .MuiMenuItem-root.Mui-selected": { background: "rgba(155,123,247,0.2)" },
+            "& .MuiMenuItem-root:hover": { background: "var(--accent-tint)" },
+            "& .MuiMenuItem-root.Mui-selected": { background: "var(--accent-tint-strong)" },
         },
     },
 } as const;
@@ -136,16 +136,16 @@ const gradientButtonSx = {
     textTransform: "none",
     fontWeight: 700,
     fontSize: "0.88rem",
-    color: "#fff",
+    color: "var(--accent-contrast)",
     px: 2.4,
     py: 1.05,
     borderRadius: "10px",
     background: ACCENT_GRADIENT,
-    boxShadow: "0 6px 18px rgba(124,92,255,0.32)",
+    boxShadow: "var(--accent-shadow)",
     "&:hover": { background: ACCENT_GRADIENT_HOVER },
     "&.Mui-disabled": {
-        background: "rgba(255,255,255,0.06)",
-        color: "rgba(245,245,244,0.35)",
+        background: "var(--overlay)",
+        color: "var(--fg-faint)",
         boxShadow: "none",
     },
 } as const;
@@ -158,9 +158,9 @@ const ghostButtonSx = {
     px: 1.6,
     py: 0.7,
     borderRadius: "8px",
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.02)",
-    "&:hover": { background: "rgba(255,255,255,0.06)", borderColor: "rgba(155,123,247,0.4)" },
+    border: "1px solid var(--field-border)",
+    background: "var(--field-bg)",
+    "&:hover": { background: "var(--overlay)", borderColor: "var(--accent-border)" },
 } as const;
 
 const sectionTitleSx = {
@@ -183,7 +183,7 @@ function roleChipColor(role: string): string {
         case "admin":
             return ACCENT;
         case "writer":
-            return "#6ee7b7";
+            return "var(--success)";
         default:
             return MUTED;
     }
@@ -198,12 +198,12 @@ function MessageLine({ msg, sx }: { msg: Msg; sx?: object }) {
     return (
         <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 1.2, ...sx }}>
             {msg.type === "ok" ? (
-                <CheckCircleIcon sx={{ fontSize: 16, color: "#86efac" }} />
+                <CheckCircleIcon sx={{ fontSize: 16, color: "var(--success)" }} />
             ) : (
-                <ErrorOutlineIcon sx={{ fontSize: 16, color: "#fca5a5" }} />
+                <ErrorOutlineIcon sx={{ fontSize: 16, color: "var(--danger)" }} />
             )}
             <Typography
-                sx={{ fontSize: "0.82rem", color: msg.type === "ok" ? "#86efac" : "#fca5a5" }}
+                sx={{ fontSize: "0.82rem", color: msg.type === "ok" ? "var(--success)" : "var(--danger)" }}
             >
                 {msg.text}
             </Typography>
@@ -435,7 +435,7 @@ function YourWorkspacesCard({
                                 sx={{
                                     width: 34,
                                     height: 34,
-                                    bgcolor: "rgba(155,123,247,0.18)",
+                                    bgcolor: "var(--accent-tint-strong)",
                                     color: ACCENT,
                                     fontWeight: 700,
                                     fontSize: "0.85rem",
@@ -466,7 +466,7 @@ function YourWorkspacesCard({
                                                 height: 18,
                                                 fontSize: "0.62rem",
                                                 fontWeight: 700,
-                                                color: "#6ee7b7",
+                                                color: "var(--success)",
                                                 background: "rgba(110,231,183,0.12)",
                                                 border: "1px solid rgba(110,231,183,0.25)",
                                             }}
@@ -501,7 +501,7 @@ function YourWorkspacesCard({
                                     }}
                                 >
                                     {busy ? (
-                                        <CircularProgress size={15} sx={{ color: "#fff" }} />
+                                        <CircularProgress size={15} sx={{ color: "var(--accent-contrast)" }} />
                                     ) : (
                                         "Dashboard"
                                     )}
@@ -549,7 +549,7 @@ function HeaderCard({
                         sx={{
                             width: 44,
                             height: 44,
-                            bgcolor: "rgba(155,123,247,0.18)",
+                            bgcolor: "var(--accent-tint-strong)",
                             color: ACCENT,
                             fontWeight: 700,
                         }}
@@ -576,7 +576,7 @@ function HeaderCard({
                                 fontSize: "0.72rem",
                                 fontWeight: 600,
                                 color: roleChipColor(role),
-                                background: "rgba(255,255,255,0.04)",
+                                background: "var(--overlay)",
                                 border: `1px solid ${BORDER}`,
                             }}
                         />
@@ -858,7 +858,7 @@ function MembersCard({
                                 sx={{
                                     width: 38,
                                     height: 38,
-                                    bgcolor: "rgba(155,123,247,0.18)",
+                                    bgcolor: "var(--accent-tint-strong)",
                                     color: ACCENT,
                                     fontWeight: 700,
                                     fontSize: "0.95rem",
@@ -917,7 +917,7 @@ function MembersCard({
                                         }}
                                     >
                                         {busy ? (
-                                            <CircularProgress size={16} sx={{ color: "#fff" }} />
+                                            <CircularProgress size={16} sx={{ color: "var(--accent-contrast)" }} />
                                         ) : (
                                             "Approve"
                                         )}
@@ -1243,7 +1243,7 @@ function InviteLinkCard({
                     sx={{ ...gradientButtonSx, mt: 2, minWidth: 170 }}
                 >
                     {busy ? (
-                        <CircularProgress size={18} sx={{ color: "#fff" }} />
+                        <CircularProgress size={18} sx={{ color: "var(--accent-contrast)" }} />
                     ) : (
                         "Generate invite link"
                     )}
