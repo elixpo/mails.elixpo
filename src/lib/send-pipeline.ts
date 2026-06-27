@@ -277,10 +277,12 @@ export interface RedeliverResult {
 
 /**
  * Re-attempt a previously-queued delivery, rebuilding everything from its row.
- * Called by the retry consumer (workers/smtp-sender) via /v1/internal/redeliver.
- * Marks the row sent/failed; on a still-transient failure it leaves the row
- * `queued` and asks the consumer to retry. `final` (DLQ path) skips the attempt
- * and marks the row failed once retries are exhausted.
+ * Called by the consumer Worker (workers/smtp-sender) via /v1/internal/redeliver
+ * for both queues:
+ *   send queue  (final=false) — attempt; a still-transient failure leaves the
+ *               row `queued` and asks CF to retry with backoff.
+ *   retry queue (final=true)  — the failed-email queue's last attempt; it always
+ *               resolves the row to sent or failed (never asks for more retries).
  */
 export async function redeliverById(
     db: D1Database,
@@ -290,11 +292,6 @@ export async function redeliverById(
     const row = await getDelivery(db, deliveryId);
     if (!row) return { ok: false, status: "failed", retryable: false, error: "delivery_not_found" };
     if (row.status === "sent") return { ok: true, status: "sent", retryable: false };
-
-    if (opts.final) {
-        await markDeliveryFailed(db, deliveryId, row.error || "Retries exhausted.", row.smtp_response ?? null);
-        return { ok: false, status: "failed", retryable: false, error: "retries_exhausted" };
-    }
 
     const template = row.template_id ? await getTemplate(db, row.tenant_id, row.template_id) : null;
     if (!template) {
@@ -323,7 +320,9 @@ export async function redeliverById(
         await markDeliverySent(db, deliveryId, r.smtpResponse ?? null);
         return { ok: true, status: "sent", retryable: false };
     }
-    if (r.retryable) {
+    // Still transient AND we're not on the last-chance retry queue → keep queued
+    // and let the consumer retry. Otherwise (permanent, or final attempt) resolve.
+    if (r.retryable && !opts.final) {
         await markDeliveryQueued(db, deliveryId, r.error ?? null);
         return { ok: false, status: "queued", retryable: true, error: r.error };
     }

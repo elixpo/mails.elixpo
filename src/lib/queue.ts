@@ -12,9 +12,15 @@
 
 import type { Queue } from "@cloudflare/workers-types";
 
-/** Names must match wrangler.toml (producer) + workers/smtp-sender (consumer). */
+/**
+ * Two queues (names must match wrangler.toml + workers/smtp-sender):
+ *   elixpo-mail-send       — drives (re)send attempts; CF retries with backoff.
+ *   elixpo-mail-send-retry — the failed-email queue: where the send queue's
+ *                            exhausted messages land for one last attempt before
+ *                            the delivery is marked permanently failed.
+ */
 export const SEND_QUEUE_NAME = "elixpo-mail-send";
-export const SEND_DLQ_NAME = "elixpo-mail-send-dlq";
+export const SEND_RETRY_QUEUE_NAME = "elixpo-mail-send-retry";
 
 export interface SendRetryJob {
     /** The deliveries row to re-attempt. Everything else is rebuilt from it. */
