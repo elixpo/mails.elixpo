@@ -5,6 +5,7 @@ import { extractVariables } from "@/lib/template-vars";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import SaveIcon from "@mui/icons-material/Save";
+import SettingsIcon from "@mui/icons-material/Settings";
 import SendIcon from "@mui/icons-material/Send";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
@@ -380,6 +381,16 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                         <Typography sx={{ color: "var(--success)", fontSize: "0.85rem" }}>
                             Saved
                         </Typography>
+                    )}
+                    {templateId && (
+                        <Button
+                            component={Link}
+                            href={`/dashboard/templates/${templateId}/settings`}
+                            startIcon={<SettingsIcon sx={{ fontSize: "1.05rem !important" }} />}
+                            sx={{ ...GHOST_BTN, fontSize: "0.9rem" }}
+                        >
+                            Settings
+                        </Button>
                     )}
                     {canWrite && (
                         <>
