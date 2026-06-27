@@ -192,10 +192,28 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     }, [templateId]);
 
     // Live {{variable}} detection from the subject + editor content.
-    const variables = useMemo(
-        () => extractVariables(subject, JSON.stringify(blocks)),
+    // Variable names referenced in the subject/body. We recompute as the body
+    // changes, but keep the ARRAY REFERENCE stable until the *set* of names
+    // actually changes — otherwise every keystroke handed the editor a fresh
+    // `variableSuggestions` array, which re-initialised it and reset the caret.
+    const variableKey = useMemo(
+        () => extractVariables(subject, JSON.stringify(blocks)).join(" "),
         [subject, blocks],
     );
+    const variables = useMemo(
+        () => (variableKey ? variableKey.split(" ") : []),
+        [variableKey],
+    );
+
+    // Stable identities for every non-primitive editor prop. The composer
+    // re-renders on each keystroke (setBlocks), so any inline object/callback
+    // here would be a fresh reference each time and re-initialise the editor.
+    const buttonDefaults = useMemo(() => ({ color: "#7c5cff", align: "left" as const }), []);
+    const handleEditorReady = useCallback((api: any) => {
+        apiRef.current = api;
+        setEditorReady(true);
+    }, []);
+    const handleEditorChange = useCallback((ed: any) => setBlocks(ed?.document ?? []), []);
 
     // Gate saving: require a name + subject and a non-trivial body. Templates are
     // attached to products via webhooks (configured on the product), not here.
@@ -603,12 +621,9 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             placeholder="Compose your email… type '/' for blocks, {{variables}} for dynamic values"
                             uploadFile={handleUpload}
                             variableSuggestions={variables}
-                            buttonDefaults={{ color: "#7c5cff", align: "left" }}
-                            onReady={(api) => {
-                                apiRef.current = api;
-                                setEditorReady(true);
-                            }}
-                            onChange={(ed: any) => setBlocks(ed?.document ?? [])}
+                            buttonDefaults={buttonDefaults}
+                            onReady={handleEditorReady}
+                            onChange={handleEditorChange}
                         />
                     </Box>
                     <ComposerToolbar
