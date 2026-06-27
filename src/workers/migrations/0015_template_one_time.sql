@@ -6,14 +6,15 @@
 -- footer in footer_json. Product-backed templates (product_id NOT NULL) are
 -- unchanged and still inherit the product footer at send time.
 --
--- SQLite can't drop a NOT NULL constraint in place, so rebuild the table. D1
--- DOES enforce foreign keys during migrations, and webhooks/deliveries reference
--- templates(id) — so dropping/renaming templates would trip an immediate FK
--- check. `defer_foreign_keys` postpones every FK check to the end of the
--- migration transaction, by which point templates exists again with all the same
--- ids, so the deferred check passes. (Unlike PRAGMA foreign_keys=OFF, this works
--- inside a transaction.)
-PRAGMA defer_foreign_keys = ON;
+-- SQLite can't drop a NOT NULL constraint in place, so rebuild the table.
+-- webhooks / deliveries / template_attachments all reference templates(id).
+-- `defer_foreign_keys` does NOT work here: DROP TABLE's implicit row-delete bumps
+-- the deferred-violation counter, and because the replacement rows land in a
+-- differently-named table that counter is never cleared, so COMMIT fails. D1
+-- runs each migration statement on one connection (no wrapping transaction), so
+-- a plain `PRAGMA foreign_keys=OFF` *does* take effect for the whole rebuild —
+-- that's the approach used here. We re-enable it at the end.
+PRAGMA foreign_keys=OFF;
 
 DROP TABLE IF EXISTS templates_new;
 
@@ -51,3 +52,5 @@ ALTER TABLE templates_new RENAME TO templates;
 
 CREATE INDEX IF NOT EXISTS idx_templates_product ON templates(product_id);
 CREATE INDEX IF NOT EXISTS idx_templates_tenant ON templates(tenant_id);
+
+PRAGMA foreign_keys=ON;
