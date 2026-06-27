@@ -10,6 +10,14 @@
     caret-color: var(--fg) !important;
 }
 
+/* 1b. Slightly smaller default body size so more of the email is on screen.
+   This is the editing surface only — the sent email keeps its own styles. */
+.lix-editor .ProseMirror,
+.lix-editor .bn-block-content,
+.lix-editor .bn-inline-content {
+    font-size: 0.9rem;
+}
+
 /* 2. Horizontal rule (the `---` divider) — lift contrast on either canvas. */
 .lix-editor hr,
 .lix-editor-wrapper hr,

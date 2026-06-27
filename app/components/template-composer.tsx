@@ -62,7 +62,7 @@ const darkField = {
         "&:hover fieldset": { borderColor: "var(--accent-border)" },
         "&.Mui-focused fieldset": { borderColor: ACCENT },
     },
-    "& .MuiInputBase-input": { fontSize: "0.92rem", py: 0.95 },
+    "& .MuiInputBase-input": { fontSize: "0.86rem", py: 0.7 },
     "& .MuiInputBase-input::placeholder": { color: "var(--fg-faint)", opacity: 1 },
 };
 
@@ -319,8 +319,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 px: { xs: 2, md: 3 },
                 display: "flex",
                 flexDirection: "column",
-                height: { xs: "auto", lg: "calc(100vh - 140px)" },
-                minHeight: { lg: 540 },
+                height: { xs: "auto", lg: "calc(100vh - 104px)" },
+                minHeight: { lg: 560 },
             }}
         >
             {/* Compact header */}
@@ -328,7 +328,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 direction="row"
                 alignItems="center"
                 justifyContent="space-between"
-                sx={{ mb: 1.5, gap: 2, flexShrink: 0 }}
+                sx={{ mb: 1, gap: 2, flexShrink: 0 }}
             >
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
                     <Button
@@ -347,7 +347,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     <Typography
                         sx={{
                             fontWeight: 800,
-                            fontSize: "1.3rem",
+                            fontSize: "1.12rem",
                             color: "var(--fg)",
                             letterSpacing: "-0.01em",
                             overflow: "hidden",
@@ -468,7 +468,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             <Stack
                 direction="row"
                 alignItems="center"
-                sx={{ mb: 1.5, flexWrap: "wrap", gap: 0.8, flexShrink: 0 }}
+                sx={{ mb: 1, flexWrap: "wrap", gap: 0.7, flexShrink: 0 }}
             >
                 <DataObjectIcon sx={{ fontSize: 17, color: ACCENT, mr: 0.4 }} />
                 <Typography
@@ -530,18 +530,18 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                 >
                     <Box
                         sx={{
-                            p: 1.6,
+                            p: 1.1,
                             borderBottom: "1px solid var(--border)",
                             display: "flex",
                             flexDirection: "column",
-                            gap: 1.2,
+                            gap: 0.9,
                             flexShrink: 0,
                         }}
                     >
                         <Box
                             sx={{
                                 display: "grid",
-                                gap: 1.2,
+                                gap: 0.9,
                                 gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" },
                             }}
                         >
@@ -610,7 +610,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                             flex: 1,
                             minHeight: 0,
                             overflowY: "auto",
-                            py: { xs: 2, md: 2.5 },
+                            py: { xs: 1.4, md: 1.6 },
                             pr: { xs: 2, md: 3 },
                             pl: { xs: 5, md: 7, lg: 8 },
                         }}
