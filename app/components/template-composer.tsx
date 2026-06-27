@@ -220,6 +220,21 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const bodyText = useMemo(() => blocksToPlainText(blocks), [blocks]);
     const canSave = name.trim().length > 0 && subject.trim().length > 0 && bodyText.length > 2;
 
+    // Dirty tracking: grey out "Save changes" when nothing has changed since the
+    // template was loaded (or last saved). The baseline is captured once the
+    // editor has mounted and emitted its initial content.
+    const currentSig = useMemo(
+        () => JSON.stringify({ name, slug, subject, blocks, bgColor, transactional, attachments }),
+        [name, slug, subject, blocks, bgColor, transactional, attachments],
+    );
+    const baselineSigRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (editorReady && baselineSigRef.current === null) {
+            baselineSigRef.current = currentSig;
+        }
+    }, [editorReady, currentSig]);
+    const dirty = baselineSigRef.current !== null && currentSig !== baselineSigRef.current;
+
     // Debounced true-to-inbox preview: drop the editor's email-safe HTML into the
     // real email shell (chosen canvas colour + white card) so the user sees what
     // the recipient will see. {{variables}} are left literal in the preview.
@@ -275,6 +290,8 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
             if (!templateId && d.template?.id) {
                 router.replace(`/dashboard/templates/${d.template.id}`);
             } else {
+                // Re-baseline so the freshly-saved state reads as clean.
+                baselineSigRef.current = currentSig;
                 setSavedMsg(true);
                 setTimeout(() => setSavedMsg(false), 2500);
             }
@@ -417,14 +434,20 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                                 </span>
                             </Tooltip>
                             <Tooltip
-                                title={canSave ? "" : "Add a name, subject, and some body content"}
+                                title={
+                                    !canSave
+                                        ? "Add a name, subject, and some body content"
+                                        : !dirty
+                                          ? "No changes to save"
+                                          : ""
+                                }
                                 arrow
-                                disableHoverListener={canSave}
+                                disableHoverListener={canSave && dirty}
                             >
                                 <span>
                                     <Button
                                         onClick={save}
-                                        disabled={saving || !canSave}
+                                        disabled={saving || !canSave || !dirty}
                                         startIcon={
                                             saving ? (
                                                 <CircularProgress
