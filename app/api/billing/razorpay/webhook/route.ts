@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         await handleRazorpayEvent(event.event, event.payload);
     } catch (err) {
         // Log but return 200 so Razorpay doesn't retry forever
-        console.error(`[razorpay/webhook] handler error for ${event.event}:`, err);
+        console.error("[razorpay/webhook] handler error for %s:", event.event, err);
     }
 
     return NextResponse.json({ received: true });
