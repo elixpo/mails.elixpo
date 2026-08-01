@@ -74,7 +74,8 @@
         "jose": "^5.9.6",
         "next": "15.2.4",
         "react": "19.2.3",
-        "react-dom": "19.2.3"
+        "react-dom": "19.2.3",
+        "stripe": "^22.3.0"
     },
     "devDependencies": {
         "@biomejs/biome": "^1.9.4",
