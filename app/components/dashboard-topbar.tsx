@@ -248,6 +248,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                             height: 28,
                             fontSize: "0.85rem",
                             bgcolor: "var(--accent)",
+                            color: "var(--accent-contrast)",
                         }}
                     >
                         {initials(user)}
@@ -325,6 +326,7 @@ export default function DashboardTopbar({ user }: { user: DashboardUser }) {
                                     height: 38,
                                     fontSize: "1rem",
                                     bgcolor: "var(--accent)",
+                                    color: "var(--accent-contrast)",
                                 }}
                             >
                                 {initials(user)}

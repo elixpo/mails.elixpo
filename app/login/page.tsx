@@ -156,9 +156,9 @@ function LoginInner() {
                             px: 2,
                             py: 1.2,
                             borderRadius: "8px",
-                            background: "rgba(179,0,0,0.06)",
-                            border: "1px solid rgba(179,0,0,0.2)",
-                            color: "#b30000",
+                            background: "color-mix(in srgb, var(--danger) 8%, transparent)",
+                            border: "1px solid color-mix(in srgb, var(--danger) 30%, transparent)",
+                            color: "var(--danger-fg)",
                             fontSize: "0.85rem",
                         }}
                     >

@@ -21,7 +21,7 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
         heading: "Company",
         links: [
             { label: "Elixpo", href: "https://elixpo.com" },
-            { label: "GitHub", href: "https://github.com/elixpo/mail.elixpo" },
+            { label: "GitHub", href: "https://github.com/elixpo/mails.elixpo" },
             { label: "Contact", href: "mailto:hello@elixpo.com" },
         ],
     },

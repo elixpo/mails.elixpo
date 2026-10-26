@@ -116,6 +116,10 @@
     --accent: #79a7ff;
     --accent-2: #a5c2ff;
     --accent-contrast: #0f1712;
+    --accent-gradient: linear-gradient(135deg, #79a7ff 0%, #a5c2ff 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #8db4ff 0%, #b6ceff 100%);
+    --accent-shadow: rgba(121, 167, 255, 0.22);
+    --danger-fg: #f2836f;
     --accent-tint: rgba(121, 167, 255, 0.1);
     --accent-tint-strong: rgba(121, 167, 255, 0.16);
     --accent-border: rgba(121, 167, 255, 0.32);
@@ -180,7 +184,9 @@ body {
 }
 
 /* Mono uppercase eyebrow (research.elixpo). */
-.eyebrow {
+/* Doubled selector so it beats MUI Typography's emotion class. */
+.eyebrow,
+.MuiTypography-root.eyebrow {
     margin: 0 0 1rem;
     color: var(--accent);
     font: 700 0.68rem / 1.4 ui-monospace, SFMono-Regular, Menlo, monospace;

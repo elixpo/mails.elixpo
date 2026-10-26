@@ -18,7 +18,7 @@ interface Me {
     avatar: string | null;
 }
 
-const REPO = "elixpo/mail.elixpo";
+const REPO = "elixpo/mails.elixpo";
 const REPO_URL = `https://github.com/${REPO}`;
 
 const LINKS = [
@@ -285,6 +285,7 @@ const Navbar = () => {
                                     height: 28,
                                     fontSize: "0.85rem",
                                     bgcolor: "var(--accent)",
+                                    color: "var(--accent-contrast)",
                                 }}
                             >
                                 {(me.name || me.email || "?").charAt(0).toUpperCase()}

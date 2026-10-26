@@ -4,7 +4,7 @@ import { Box, Chip, Typography } from "@mui/material";
 import Link from "next/link";
 import type React from "react";
 
-const CORAL = "var(--accent)";
+const CORAL = "var(--orange)";
 const ACTION_BLUE = "var(--action-fg)";
 const INK = "var(--fg)";
 const SLATE = "var(--fg-muted)";
@@ -175,7 +175,7 @@ export function Callout({
                 my: 3,
                 p: 2.5,
                 borderRadius: "8px",
-                border: `1px solid ${isWarn ? "rgba(58, 101, 199, 0.25)" : "rgba(24, 99, 220, 0.15)"}`,
+                border: `1px solid ${isWarn ? "rgba(231, 96, 67, 0.25)" : "rgba(24, 99, 220, 0.15)"}`,
                 background: bgColor,
                 borderLeft: `3px solid ${borderColor}`,
             }}
