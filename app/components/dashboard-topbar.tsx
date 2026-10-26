@@ -41,7 +41,7 @@ interface WorkspaceOption {
 }
 
 const BORDER = "var(--border)";
-const ACCENT = "#ff7759";
+const ACCENT = "var(--accent)";
 
 const MENU_ITEM_SX = {
     fontSize: "0.86rem",
