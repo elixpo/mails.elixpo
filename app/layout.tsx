@@ -164,7 +164,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     </div>
                 </ThemeProvider>
                 {/* Elixpo festive themes: dates live in agent.elixpo config/festivals.yaml */}
-                <Script src="https://agent.elixpo.com/festive/theme.js" strategy="afterInteractive" />
+                <Script
+                    src="https://agent.elixpo.com/festive/theme.js"
+                    strategy="afterInteractive"
+                />
             </body>
         </html>
     );
