@@ -1,6 +1,7 @@
 "use client";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -180,6 +181,26 @@ export default function TemplateSendDialog({
     const [chips, setChips] = useState<string[]>([]);
     const [recipInput, setRecipInput] = useState("");
 
+    // Whether the localStorage buffer has completed its initial load for this open session
+    const [bufferLoaded, setBufferLoaded] = useState(false);
+
+    const removeChip = (email: string) => {
+        setChips((c) => c.filter((x) => x !== email));
+        setRecipientVars((current) => {
+            if (!current[email]) return current;
+            const next = { ...current };
+            delete next[email];
+            return next;
+        });
+    };
+
+    const handleClearRecipients = () => {
+        setChips([]);
+        setRecipInput("");
+        setRecipientVars({});
+        setCsvErrors([]);
+    };
+
     const addTokens = (raw: string) => {
         const found: string[] = [];
         for (const tok of raw.split(/[\s,]+/)) {
@@ -240,8 +261,12 @@ export default function TemplateSendDialog({
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ── On open: load senders, snapshot live edits, then preview ──
+    // biome-ignore lint/correctness/useExhaustiveDependencies: on-open initialization
     useEffect(() => {
-        if (!open) return;
+        if (!open) {
+            setBufferLoaded(false);
+            return;
+        }
         let alive = true;
 
         // Reset per-open state.
@@ -249,36 +274,68 @@ export default function TemplateSendDialog({
         setSendersError(null);
         setAliasId("");
         setPreviewSubject("");
+        setRecipInput("");
+        setCsvErrors([]);
 
-        let loadedChips: string[] | null = null;
-        let loadedVars: Record<string, string> | null = null;
+        let loadedChips: string[] = [];
+        const loadedVars: Record<string, string> = {};
+        const loadedRecipientVars: Record<string, Record<string, string>> = {};
         try {
             const saved = localStorage.getItem(`elixpo_send_buffer_${templateId}`);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && typeof parsed === "object") {
-                    if (Array.isArray(parsed.chips)) loadedChips = parsed.chips;
-                    if (parsed.vars && typeof parsed.vars === "object") loadedVars = parsed.vars;
+                    if (Array.isArray(parsed.chips)) {
+                        loadedChips = parsed.chips.filter(
+                            (x: unknown): x is string => typeof x === "string",
+                        );
+                    }
+                    if (
+                        parsed.vars &&
+                        typeof parsed.vars === "object" &&
+                        !Array.isArray(parsed.vars)
+                    ) {
+                        for (const [k, v] of Object.entries(
+                            parsed.vars as Record<string, unknown>,
+                        )) {
+                            if (typeof v === "string") loadedVars[k] = v;
+                        }
+                    }
+                    if (
+                        parsed.recipientVars &&
+                        typeof parsed.recipientVars === "object" &&
+                        !Array.isArray(parsed.recipientVars)
+                    ) {
+                        for (const [email, rVars] of Object.entries(
+                            parsed.recipientVars as Record<string, unknown>,
+                        )) {
+                            if (rVars && typeof rVars === "object" && !Array.isArray(rVars)) {
+                                const cleanRow: Record<string, string> = {};
+                                for (const [k, v] of Object.entries(
+                                    rVars as Record<string, unknown>,
+                                )) {
+                                    if (typeof v === "string") cleanRow[k] = v;
+                                }
+                                loadedRecipientVars[email] = cleanRow;
+                            }
+                        }
+                    }
                 }
             }
         } catch (e) {
             console.error("Failed to load send buffer from localStorage", e);
         }
 
-        if (loadedChips !== null) {
-            setChips(loadedChips);
-        } else {
-            setChips([]);
-        }
-
+        setChips(loadedChips);
+        setRecipientVars(loadedRecipientVars);
         setVars(() => {
             const next: Record<string, string> = {};
-            const sourceVars = loadedVars || {};
             for (const name of variables) {
-                next[name] = sourceVars[name] ?? "";
+                next[name] = loadedVars[name] ?? "";
             }
             return next;
         });
+        setBufferLoaded(true);
 
         // Snapshot the live subject + body so preview/send reflect unsaved edits.
         subjectRef.current = subject;
@@ -326,15 +383,25 @@ export default function TemplateSendDialog({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
+    // ── Persist recipients, variables, and recipientVars buffer to localStorage ──
     useEffect(() => {
-        if (!open) return;
+        if (!open || !bufferLoaded || send.phase === "ok") return;
         try {
-            const data = { chips, vars };
-            localStorage.setItem(`elixpo_send_buffer_${templateId}`, JSON.stringify(data));
+            const hasData =
+                chips.length > 0 ||
+                Object.keys(recipientVars).length > 0 ||
+                Object.values(vars).some((v) => v && v.trim() !== "");
+
+            if (hasData) {
+                const data = { chips, vars, recipientVars };
+                localStorage.setItem(`elixpo_send_buffer_${templateId}`, JSON.stringify(data));
+            } else {
+                localStorage.removeItem(`elixpo_send_buffer_${templateId}`);
+            }
         } catch (e) {
             console.error("Failed to save send buffer to localStorage", e);
         }
-    }, [chips, vars, templateId, open]);
+    }, [chips, vars, recipientVars, templateId, open, bufferLoaded, send.phase]);
 
     // ── Lazy-load aliases when a sender is chosen ──
     useEffect(() => {
@@ -394,6 +461,7 @@ export default function TemplateSendDialog({
     }, [templateId, vars, bgColor]);
 
     // ── Auto-refresh preview on variable changes (debounced ~400ms) ──
+    // biome-ignore lint/correctness/useExhaustiveDependencies: debounced preview refresh on vars change
     useEffect(() => {
         if (!open) return;
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -452,6 +520,14 @@ export default function TemplateSendDialog({
             } catch (e) {
                 console.error("Failed to clear send buffer from localStorage", e);
             }
+            setChips([]);
+            setRecipInput("");
+            setRecipientVars({});
+            setVars(() => {
+                const next: Record<string, string> = {};
+                for (const name of variables) next[name] = "";
+                return next;
+            });
         } catch (e) {
             const msg = e instanceof Error ? e.message : "Send failed.";
             setSend({ phase: "err", text: msg });
@@ -600,9 +676,7 @@ export default function TemplateSendDialog({
                                         key={email}
                                         label={email}
                                         size="small"
-                                        onDelete={() =>
-                                            setChips((c) => c.filter((x) => x !== email))
-                                        }
+                                        onDelete={() => removeChip(email)}
                                         sx={{
                                             height: 24,
                                             fontSize: "0.76rem",
@@ -628,7 +702,8 @@ export default function TemplateSendDialog({
                                             recipInput === "" &&
                                             chips.length
                                         ) {
-                                            setChips((c) => c.slice(0, -1));
+                                            const last = chips[chips.length - 1];
+                                            if (last) removeChip(last);
                                         }
                                     }}
                                     onBlur={commitRecipInput}
@@ -691,26 +766,49 @@ export default function TemplateSendDialog({
                                     </Typography>
                                 </Box>
 
-                                <Button
-                                    size="small"
-                                    startIcon={
-                                        isUploadingCsv ? (
-                                            <CircularProgress
-                                                size={12}
-                                                sx={{ color: "var(--fg-muted)" }}
-                                            />
-                                        ) : (
-                                            <FileUploadIcon
-                                                sx={{ fontSize: "1.1rem !important" }}
-                                            />
-                                        )
-                                    }
-                                    disabled={isUploadingCsv}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    sx={{ ...GHOST_BTN, py: 0.5, px: 1.5 }}
-                                >
-                                    Upload CSV
-                                </Button>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    {(chips.length > 0 ||
+                                        Object.keys(recipientVars).length > 0) && (
+                                        <Button
+                                            size="small"
+                                            startIcon={
+                                                <DeleteOutlineIcon
+                                                    sx={{ fontSize: "1.1rem !important" }}
+                                                />
+                                            }
+                                            onClick={handleClearRecipients}
+                                            disabled={isUploadingCsv || send.phase === "loading"}
+                                            sx={{
+                                                ...GHOST_BTN,
+                                                py: 0.5,
+                                                px: 1.5,
+                                                color: "var(--fg-muted)",
+                                            }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                    <Button
+                                        size="small"
+                                        startIcon={
+                                            isUploadingCsv ? (
+                                                <CircularProgress
+                                                    size={12}
+                                                    sx={{ color: "var(--fg-muted)" }}
+                                                />
+                                            ) : (
+                                                <FileUploadIcon
+                                                    sx={{ fontSize: "1.1rem !important" }}
+                                                />
+                                            )
+                                        }
+                                        disabled={isUploadingCsv}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        sx={{ ...GHOST_BTN, py: 0.5, px: 1.5 }}
+                                    >
+                                        Upload CSV
+                                    </Button>
+                                </Stack>
                             </Stack>
                             {csvErrors.length > 0 && (
                                 <Box
@@ -736,6 +834,7 @@ export default function TemplateSendDialog({
                                     </Typography>
                                     {csvErrors.map((err, idx) => (
                                         <Typography
+                                            // biome-ignore lint/suspicious/noArrayIndexKey: error row display order is static
                                             key={idx}
                                             sx={{ fontSize: "0.7rem", color: RED, lineHeight: 1.4 }}
                                         >
