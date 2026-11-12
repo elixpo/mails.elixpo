@@ -8,6 +8,8 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SendIcon from "@mui/icons-material/Send";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
+    Alert,
+    AlertTitle,
     Box,
     Button,
     Chip,
@@ -165,6 +167,7 @@ interface TemplateSendDialogProps {
     variables: string[];
     getContentHtml: () => Promise<string>;
     bgColor?: string;
+    onTemplateUpdated?: (updatedTemplate: any) => void;
 }
 
 export default function TemplateSendDialog({
@@ -175,6 +178,7 @@ export default function TemplateSendDialog({
     variables,
     getContentHtml,
     bgColor,
+    onTemplateUpdated,
 }: TemplateSendDialogProps) {
     // Recipients as chips. `chips` holds the committed emails; `recipInput` is
     // the in-progress text. Typing a comma / space / Enter commits the token.
@@ -245,6 +249,14 @@ export default function TemplateSendDialog({
     const contentHtmlRef = useRef<string>("");
     const subjectRef = useRef<string>(subject);
 
+    // Template update notification states
+    const [templateUpdated, setTemplateUpdated] = useState(false);
+    const [currentVariables, setCurrentVariables] = useState<string[]>(variables);
+    const [currentBgColor, setCurrentBgColor] = useState<string | undefined>(bgColor);
+    const initialUpdatedAtRef = useRef<string | null>(null);
+    const dismissedUpdatedAtRef = useRef<string | null>(null);
+    const latestTemplateRef = useRef<any>(null);
+
     // Preview
     const [previewHtml, setPreviewHtml] = useState<string>("");
     const [previewSubject, setPreviewSubject] = useState<string>("");
@@ -265,6 +277,9 @@ export default function TemplateSendDialog({
     useEffect(() => {
         if (!open) {
             setBufferLoaded(false);
+            setTemplateUpdated(false);
+            latestTemplateRef.current = null;
+            dismissedUpdatedAtRef.current = null;
             return;
         }
         let alive = true;
@@ -276,6 +291,11 @@ export default function TemplateSendDialog({
         setPreviewSubject("");
         setRecipInput("");
         setCsvErrors([]);
+        setTemplateUpdated(false);
+        latestTemplateRef.current = null;
+        dismissedUpdatedAtRef.current = null;
+        setCurrentVariables(variables);
+        setCurrentBgColor(bgColor);
 
         let loadedChips: string[] = [];
         const loadedVars: Record<string, string> = {};
@@ -373,6 +393,20 @@ export default function TemplateSendDialog({
                 }
             }
 
+            // Fetch template to capture initial updated_at baseline
+            try {
+                const tmplRes = await fetch(`/api/templates/${templateId}`);
+                const tmplData = (await tmplRes.json().catch(() => ({}))) as {
+                    ok?: boolean;
+                    template?: { updated_at?: string };
+                };
+                if (alive && tmplRes.ok && tmplData?.ok && tmplData?.template?.updated_at) {
+                    initialUpdatedAtRef.current = tmplData.template.updated_at;
+                }
+            } catch {
+                /* non-fatal */
+            }
+
             // Kick off the first preview with the freshly snapshotted body.
             if (alive) refreshPreview();
         })();
@@ -428,37 +462,132 @@ export default function TemplateSendDialog({
     }, [open, senderId, aliasesBySender]);
 
     // ── Preview (POST /preview with the live snapshot + current vars) ──
-    const refreshPreview = useCallback(async () => {
-        setPreviewState({ phase: "loading" });
-        try {
-            const res = await fetch(`/api/templates/${templateId}/preview`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    vars,
-                    subject: subjectRef.current,
-                    contentHtml: contentHtmlRef.current,
-                    bgColor,
-                }),
-            });
-            const d = (await res.json().catch(() => ({}))) as {
-                ok?: boolean;
-                error?: string;
-                html?: string;
-                subject?: string;
-            };
-            if (!res.ok || !d?.ok) throw new Error(d?.error || "Could not render the preview.");
-            setPreviewHtml(typeof d.html === "string" ? d.html : "");
-            setPreviewSubject(typeof d.subject === "string" ? d.subject : "");
-            setPreviewState({ phase: "idle" });
-        } catch (e) {
-            setPreviewState({
-                phase: "err",
-                text: e instanceof Error ? e.message : "Could not render the preview.",
-            });
+    const refreshPreview = useCallback(
+        async (overrideVars?: Record<string, string>, overrideBg?: string) => {
+            setPreviewState({ phase: "loading" });
+            try {
+                const activeVars = overrideVars ?? vars;
+                const activeBg = overrideBg !== undefined ? overrideBg : currentBgColor;
+                const res = await fetch(`/api/templates/${templateId}/preview`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        vars: activeVars,
+                        subject: subjectRef.current,
+                        contentHtml: contentHtmlRef.current,
+                        bgColor: activeBg,
+                    }),
+                });
+                const d = (await res.json().catch(() => ({}))) as {
+                    ok?: boolean;
+                    error?: string;
+                    html?: string;
+                    subject?: string;
+                };
+                if (!res.ok || !d?.ok) throw new Error(d?.error || "Could not render the preview.");
+                setPreviewHtml(typeof d.html === "string" ? d.html : "");
+                setPreviewSubject(typeof d.subject === "string" ? d.subject : "");
+                setPreviewState({ phase: "idle" });
+            } catch (e) {
+                setPreviewState({
+                    phase: "err",
+                    text: e instanceof Error ? e.message : "Could not render the preview.",
+                });
+            }
+        },
+        [templateId, vars, currentBgColor],
+    );
+
+    // ── Poll for template updates while the send preview is open ──
+    useEffect(() => {
+        if (!open) return;
+
+        const checkUpdate = async () => {
+            try {
+                const res = await fetch(`/api/templates/${templateId}`);
+                if (!res.ok) return;
+                const d = (await res.json().catch(() => ({}))) as {
+                    ok?: boolean;
+                    template?: {
+                        updated_at?: string;
+                        subject?: string;
+                        content_html?: string | null;
+                        bg_color?: string | null;
+                        variables?: string[];
+                    };
+                };
+                if (!d?.ok || !d?.template) return;
+
+                const serverUpdatedAt = d.template.updated_at;
+                if (!initialUpdatedAtRef.current) {
+                    initialUpdatedAtRef.current = serverUpdatedAt;
+                    return;
+                }
+
+                if (
+                    serverUpdatedAt &&
+                    serverUpdatedAt !== initialUpdatedAtRef.current &&
+                    serverUpdatedAt !== dismissedUpdatedAtRef.current
+                ) {
+                    latestTemplateRef.current = d.template;
+                    setTemplateUpdated((alreadyUpdated) => {
+                        if (!alreadyUpdated) {
+                            setToast({
+                                text: "Template was modified in another session. Click 'Update preview' to load changes.",
+                                ok: false,
+                            });
+                        }
+                        return true;
+                    });
+                }
+            } catch {
+                /* ignore network errors */
+            }
+        };
+
+        const interval = setInterval(checkUpdate, 5000);
+        window.addEventListener("focus", checkUpdate);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("focus", checkUpdate);
+        };
+    }, [open, templateId]);
+
+    const applyLatestTemplate = useCallback(() => {
+        const latest = latestTemplateRef.current;
+        if (!latest) return;
+
+        if (typeof latest.subject === "string") {
+            subjectRef.current = latest.subject;
+            setPreviewSubject(latest.subject);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [templateId, vars, bgColor]);
+        if (typeof latest.content_html === "string") {
+            contentHtmlRef.current = latest.content_html;
+        }
+        const nextBg = latest.bg_color || undefined;
+        setCurrentBgColor(nextBg);
+
+        const newVarsList: string[] = Array.isArray(latest.variables) ? latest.variables : [];
+        setCurrentVariables(newVarsList);
+
+        const nextVars: Record<string, string> = {};
+        for (const name of newVarsList) {
+            nextVars[name] = vars[name] ?? "";
+        }
+        setVars(nextVars);
+
+        initialUpdatedAtRef.current = latest.updated_at;
+        dismissedUpdatedAtRef.current = null;
+        setTemplateUpdated(false);
+        setToast({
+            text: "Preview updated to latest template version.",
+            ok: true,
+        });
+
+        onTemplateUpdated?.(latest);
+        refreshPreview(nextVars, nextBg);
+    }, [vars, onTemplateUpdated, refreshPreview]);
 
     // ── Auto-refresh preview on variable changes (debounced ~400ms) ──
     // biome-ignore lint/correctness/useExhaustiveDependencies: debounced preview refresh on vars change
@@ -497,7 +626,7 @@ export default function TemplateSendDialog({
                     aliasId: aliasId || undefined,
                     subject: subjectRef.current,
                     contentHtml: contentHtmlRef.current,
-                    bgColor,
+                    bgColor: currentBgColor,
                 }),
             });
             const d = (await res.json().catch(() => ({}))) as {
@@ -525,7 +654,7 @@ export default function TemplateSendDialog({
             setRecipientVars({});
             setVars(() => {
                 const next: Record<string, string> = {};
-                for (const name of variables) next[name] = "";
+                for (const name of currentVariables) next[name] = "";
                 return next;
             });
         } catch (e) {
@@ -630,6 +759,60 @@ export default function TemplateSendDialog({
                 A one-time send — no webhook needed. Each send is recorded in your delivery logs.
             </Typography>
             <DialogContent sx={{ pb: 1 }}>
+                {templateUpdated && (
+                    <Alert
+                        severity="warning"
+                        icon={<WarningAmberIcon sx={{ color: "#f59e0b" }} />}
+                        onClose={() => {
+                            dismissedUpdatedAtRef.current =
+                                latestTemplateRef.current?.updated_at || null;
+                            setTemplateUpdated(false);
+                        }}
+                        action={
+                            <Button
+                                color="inherit"
+                                size="small"
+                                onClick={applyLatestTemplate}
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "none",
+                                    bgcolor: "rgba(245, 158, 11, 0.2)",
+                                    border: "1px solid rgba(245, 158, 11, 0.4)",
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    "&:hover": {
+                                        bgcolor: "rgba(245, 158, 11, 0.3)",
+                                    },
+                                }}
+                            >
+                                Update preview
+                            </Button>
+                        }
+                        sx={{
+                            mb: 2,
+                            borderRadius: "10px",
+                            background: "rgba(245, 158, 11, 0.12)",
+                            border: "1px solid rgba(245, 158, 11, 0.35)",
+                            color: "var(--fg)",
+                            alignItems: "center",
+                        }}
+                    >
+                        <AlertTitle
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: "0.9rem",
+                                mb: 0.2,
+                                color: "var(--fg)",
+                            }}
+                        >
+                            Template modified in another session
+                        </AlertTitle>
+                        <Typography sx={{ fontSize: "0.82rem", color: "var(--fg-muted)" }}>
+                            The subject, content, or variables were updated while you were in this
+                            send preview. Update the preview to load the latest template version.
+                        </Typography>
+                    </Alert>
+                )}
                 <Box
                     sx={{
                         display: "grid",
@@ -927,9 +1110,9 @@ export default function TemplateSendDialog({
                         {/* Variables */}
                         <Box>
                             <FieldLabel>Variables</FieldLabel>
-                            {variables.length > 0 ? (
+                            {currentVariables.length > 0 ? (
                                 <Stack spacing={1.4}>
-                                    {variables.map((name) => (
+                                    {currentVariables.map((name) => (
                                         <Box key={name}>
                                             <Typography
                                                 sx={{
