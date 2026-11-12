@@ -314,8 +314,8 @@ export default function PricingClient() {
                                 placeItems: "center",
                                 flexShrink: 0,
                                 color: CORAL,
-                                background: "rgba(58, 101, 199, 0.08)",
-                                border: "1px solid rgba(58, 101, 199, 0.2)",
+                                background: "var(--accent-tint)",
+                                border: "1px solid var(--accent-border)",
                             }}
                         >
                             <BusinessIcon sx={{ fontSize: 24 }} />
