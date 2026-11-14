@@ -520,7 +520,7 @@ export default function TemplateSendDialog({
 
                 const serverUpdatedAt = d.template.updated_at;
                 if (!initialUpdatedAtRef.current) {
-                    initialUpdatedAtRef.current = serverUpdatedAt;
+                    initialUpdatedAtRef.current = serverUpdatedAt ?? null;
                     return;
                 }
 
@@ -1153,7 +1153,7 @@ export default function TemplateSendDialog({
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
                             <FieldLabel>Preview</FieldLabel>
                             <Button
-                                onClick={refreshPreview}
+                                onClick={() => refreshPreview()}
                                 disabled={previewState.phase === "loading"}
                                 startIcon={
                                     previewState.phase === "loading" ? (

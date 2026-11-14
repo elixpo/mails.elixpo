@@ -681,7 +681,7 @@ export default function TemplateTestDialog({
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
                             <FieldLabel>Preview</FieldLabel>
                             <Button
-                                onClick={refreshPreview}
+                                onClick={() => refreshPreview()}
                                 disabled={previewState.phase === "loading"}
                                 startIcon={
                                     previewState.phase === "loading" ? (
