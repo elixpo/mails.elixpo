@@ -27,7 +27,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GHOST_BTN, PRIMARY_BTN, PageHeader } from "../../components/dashboard-ui";
 import { GlassCard } from "../../components/glass-card";
-import type { InvoiceRow, TenantSubscription, TenantUsage } from "../../src/lib/billing";
+import type { InvoiceRow, TenantSubscription, TenantUsage } from "@/lib/billing";
 import {
     type BillingCycle,
     type Currency,
@@ -35,7 +35,7 @@ import {
     type PlanId,
     getPlan,
     getYearlySavingsBadge,
-} from "../../src/lib/plans";
+} from "@/lib/plans";
 
 const TEXT = "var(--fg)";
 const TEXT_55 = "var(--fg-muted)";
@@ -147,11 +147,31 @@ export default function BillingClient({
 
         if (checkoutSuccess) {
             setToast({
-                text: "Subscription successfully updated! Welcome to your new plan.",
+                text: "Payment received — activating your plan…",
                 ok: true,
             });
-            // Refresh data from API
-            fetchBillingData();
+            // The plan flips when Elixpo Pay's signed grant webhook lands, which
+            // can be a few seconds after the redirect. Poll briefly.
+            let tries = 0;
+            const timer = setInterval(async () => {
+                tries++;
+                const sub = await fetchBillingData();
+                if ((sub && sub.plan !== "starter") || tries >= 10) {
+                    clearInterval(timer);
+                    setToast(
+                        sub && sub.plan !== "starter"
+                            ? {
+                                  text: `You're on ${sub.planDefinition.name}. Welcome aboard!`,
+                                  ok: true,
+                              }
+                            : {
+                                  text: "Payment received. Your plan will update within a minute — refresh if it doesn't.",
+                                  ok: true,
+                              },
+                    );
+                }
+            }, 2000);
+            return () => clearInterval(timer);
         }
 
         if (queryPlan && (queryPlan === "pro" || queryPlan === "scale")) {
@@ -166,18 +186,20 @@ export default function BillingClient({
         }
     }, [searchParams]);
 
-    const fetchBillingData = async () => {
+    const fetchBillingData = async (): Promise<TenantSubscription | null> => {
         try {
             const res = await fetch("/api/billing");
-            const data = await res.json();
+            const data: any = await res.json();
             if (res.ok && data?.ok) {
                 if (data.subscription) setSubscription(data.subscription);
                 if (data.usage) setUsage(data.usage);
                 if (data.invoices) setInvoices(data.invoices);
+                return data.subscription ?? null;
             }
         } catch {
             /* ignore */
         }
+        return null;
     };
 
     const handleStartCheckout = async () => {
@@ -203,26 +225,10 @@ export default function BillingClient({
                 throw new Error(data?.message || data?.error || "Failed to initiate checkout");
             }
 
-            // Redirect to provider checkout
+            // Redirect to the Elixpo Pay hosted checkout
             window.location.href = data.url;
         } catch (e: any) {
             setToast({ text: e?.message || "Checkout failed", ok: false });
-            setLoadingAction(null);
-        }
-    };
-
-    const handleOpenPortal = async () => {
-        setLoadingAction("portal");
-        try {
-            const res = await fetch("/api/billing/portal", { method: "POST" });
-            const data = await res.json();
-            if (res.ok && data?.ok && data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error(data?.message || "Could not open billing portal");
-            }
-        } catch (e: any) {
-            setToast({ text: e?.message || "Portal unavailable", ok: false });
             setLoadingAction(null);
         }
     };
@@ -231,7 +237,7 @@ export default function BillingClient({
         setLoadingAction("cancel");
         try {
             const res = await fetch("/api/billing/cancel", { method: "POST" });
-            const data = await res.json();
+            const data: any = await res.json();
             if (!res.ok || !data?.ok) throw new Error(data?.message || "Cancellation failed");
 
             setToast({
@@ -242,22 +248,6 @@ export default function BillingClient({
             fetchBillingData();
         } catch (e: any) {
             setToast({ text: e?.message || "Failed to cancel", ok: false });
-        } finally {
-            setLoadingAction(null);
-        }
-    };
-
-    const handleResumeSubscription = async () => {
-        setLoadingAction("resume");
-        try {
-            const res = await fetch("/api/billing/resume", { method: "POST" });
-            const data = await res.json();
-            if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to resume");
-
-            setToast({ text: "Subscription renewed successfully!", ok: true });
-            fetchBillingData();
-        } catch (e: any) {
-            setToast({ text: e?.message || "Failed to resume", ok: false });
         } finally {
             setLoadingAction(null);
         }
@@ -336,17 +326,6 @@ export default function BillingClient({
             {subscription.cancelAtPeriodEnd && (
                 <Alert
                     severity="info"
-                    action={
-                        <Button
-                            color="inherit"
-                            size="small"
-                            onClick={handleResumeSubscription}
-                            disabled={loadingAction === "resume"}
-                            sx={{ fontWeight: 700, textTransform: "none" }}
-                        >
-                            {loadingAction === "resume" ? "Resuming…" : "Keep plan"}
-                        </Button>
-                    }
                     sx={{
                         mb: 3,
                         borderRadius: "12px",
@@ -358,7 +337,8 @@ export default function BillingClient({
                     {subscription.currentPeriodEnd
                         ? ` on ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
                         : ""}
-                    . You can resume at any time before then.
+                    . You keep every {plan.name} feature until then, and can subscribe again any
+                    time after.
                 </Alert>
             )}
 
@@ -478,19 +458,6 @@ export default function BillingClient({
                         >
                             {plan.id === "starter" ? "Upgrade plan" : "Change plan"}
                         </Button>
-
-                        {subscription.paymentProvider === "stripe" && subscription.customerId && (
-                            <Button
-                                onClick={handleOpenPortal}
-                                disabled={loadingAction === "portal"}
-                                startIcon={
-                                    <CreditCardIcon sx={{ fontSize: "1.05rem !important" }} />
-                                }
-                                sx={{ ...GHOST_BTN, fontSize: "0.9rem" }}
-                            >
-                                {loadingAction === "portal" ? "Loading…" : "Manage billing"}
-                            </Button>
-                        )}
 
                         {plan.id !== "starter" && !subscription.cancelAtPeriodEnd && (
                             <Button
@@ -891,8 +858,8 @@ export default function BillingClient({
 
                     <Typography sx={{ fontSize: "0.78rem", color: "var(--fg-faint)", mt: 2.5 }}>
                         {selectedCurrency === "INR"
-                            ? "Recurring auto-pay via Razorpay (UPI AutoPay & cards with RBI e-mandate)."
-                            : "Recurring auto-pay via Stripe (credit & debit cards)."}
+                            ? "Secure auto-pay through Elixpo Pay — UPI AutoPay and cards, RBI e-mandate compliant."
+                            : "Secure auto-pay through Elixpo Pay — international credit & debit cards."}
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>

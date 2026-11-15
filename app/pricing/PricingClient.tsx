@@ -51,7 +51,7 @@ const OUTLINE_BTN = {
 const FAQS: Faq[] = [
     {
         q: "What payment methods and currencies are supported?",
-        a: "We support USD globally via Stripe (credit & debit cards) and INR in India via Razorpay (UPI AutoPay, cards, and net banking with RBI e-mandate compliance for recurring auto-pay).",
+        a: "Billing runs on Elixpo Pay, the payments layer of the Elixpo ecosystem. Pay in INR with UPI AutoPay, cards, or net banking (RBI e-mandate compliant), or in USD with international credit and debit cards. Receipts land in your inbox after every charge.",
     },
     {
         q: "How does the yearly discount work?",

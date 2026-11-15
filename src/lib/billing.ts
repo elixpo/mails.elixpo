@@ -21,13 +21,12 @@ export interface TenantSubscription {
     planDefinition: PlanDefinition;
     billingCycle: BillingCycle;
     billingCurrency: Currency;
-    subscriptionId: string | null;
     subscriptionStatus: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
     currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
     cancelAtPeriodEnd: boolean;
-    paymentProvider: "stripe" | "razorpay" | null;
-    customerId: string | null;
+    /** "elixpo_pay" once the workspace has paid; null on the free plan. */
+    paymentProvider: "elixpo_pay" | null;
 }
 
 export interface TenantUsage {
@@ -61,7 +60,7 @@ export interface InvoiceRow {
 export interface InvoiceInput {
     id?: string;
     tenantId: string;
-    provider: "stripe" | "razorpay";
+    provider: "elixpo_pay";
     providerInvoiceId?: string | null;
     amount: number;
     currency: Currency;
@@ -97,13 +96,11 @@ export async function getTenantSubscription(
                     COALESCE(plan, 'starter') as plan,
                     COALESCE(billing_cycle, 'monthly') as billing_cycle,
                     COALESCE(billing_currency, 'USD') as billing_currency,
-                    subscription_id,
                     COALESCE(subscription_status, 'active') as subscription_status,
                     current_period_start,
                     current_period_end,
                     COALESCE(cancel_at_period_end, 0) as cancel_at_period_end,
-                    payment_provider,
-                    customer_id
+                    payment_provider
              FROM tenants WHERE id = ?`,
         )
         .bind(tenantId)
@@ -138,18 +135,13 @@ export async function getTenantSubscription(
         planDefinition,
         billingCycle,
         billingCurrency,
-        subscriptionId: typeof row?.subscription_id === "string" ? row.subscription_id : null,
         subscriptionStatus,
         currentPeriodStart:
             typeof row?.current_period_start === "string" ? row.current_period_start : null,
         currentPeriodEnd:
             typeof row?.current_period_end === "string" ? row.current_period_end : null,
         cancelAtPeriodEnd: Number(row?.cancel_at_period_end) === 1,
-        paymentProvider:
-            row?.payment_provider === "stripe" || row?.payment_provider === "razorpay"
-                ? row.payment_provider
-                : null,
-        customerId: typeof row?.customer_id === "string" ? row.customer_id : null,
+        paymentProvider: row?.payment_provider === "elixpo_pay" ? "elixpo_pay" : null,
     };
 }
 
@@ -227,7 +219,7 @@ export async function listInvoices(db: D1Database, tenantId: string): Promise<In
 
 /** Record a new invoice row. */
 export async function recordInvoice(db: D1Database, data: InvoiceInput): Promise<string> {
-    const id = data.id || newId("inv");
+    const id = data.id || newId("invoice");
     await db
         .prepare(
             `INSERT INTO invoices (
@@ -255,13 +247,11 @@ export interface SubscriptionUpdates {
     plan?: PlanId;
     billingCycle?: BillingCycle;
     billingCurrency?: Currency;
-    subscriptionId?: string | null;
     subscriptionStatus?: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
     currentPeriodStart?: string | null;
     currentPeriodEnd?: string | null;
     cancelAtPeriodEnd?: boolean;
-    paymentProvider?: "stripe" | "razorpay" | null;
-    customerId?: string | null;
+    paymentProvider?: "elixpo_pay" | null;
 }
 
 /** Update subscription fields on a tenant. */
@@ -285,10 +275,6 @@ export async function updateTenantSubscription(
         sets.push("billing_currency = ?");
         values.push(updates.billingCurrency);
     }
-    if (updates.subscriptionId !== undefined) {
-        sets.push("subscription_id = ?");
-        values.push(updates.subscriptionId);
-    }
     if (updates.subscriptionStatus !== undefined) {
         sets.push("subscription_status = ?");
         values.push(updates.subscriptionStatus);
@@ -309,10 +295,6 @@ export async function updateTenantSubscription(
         sets.push("payment_provider = ?");
         values.push(updates.paymentProvider);
     }
-    if (updates.customerId !== undefined) {
-        sets.push("customer_id = ?");
-        values.push(updates.customerId);
-    }
 
     values.push(tenantId);
     await db
@@ -327,18 +309,11 @@ export async function assertCanSend(
     tenantId: string,
 ): Promise<{ allowed: boolean; reason?: string }> {
     const sub = await getTenantSubscription(db, tenantId);
-    if (sub.subscriptionStatus === "past_due" || sub.subscriptionStatus === "unpaid") {
-        return {
-            allowed: false,
-            reason: "Your subscription payment is past due. Please update your billing method.",
-        };
-    }
-    if (sub.subscriptionStatus === "canceled" && sub.plan !== "starter") {
-        return {
-            allowed: false,
-            reason: "Your subscription was canceled. Please reactivate your plan to send emails.",
-        };
-    }
+    // A failing renewal (past_due) does NOT stop sending: the workspace already
+    // paid through current_period_end, and blocking would also stop its
+    // customers' receipts and password resets. When the period lapses
+    // Elixpo Pay's expiry grant moves the workspace to Starter, whose limits
+    // then apply below.
 
     const usage = await getTenantUsage(
         db,

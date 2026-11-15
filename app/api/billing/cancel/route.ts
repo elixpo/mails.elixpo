@@ -2,12 +2,16 @@ export const runtime = "edge";
 
 import { getTenantSubscription, updateTenantSubscription } from "@/lib/billing";
 import { getDatabase } from "@/lib/d1-client";
-import { cancelRazorpaySubscription } from "@/lib/payments/razorpay";
-import { cancelStripeSubscription } from "@/lib/payments/stripe";
+import { ElixpoPayError, cancelPaySubscription } from "@/lib/elixpo-pay";
 import { getSession } from "@/lib/session";
 import { requireWriteRole } from "@/lib/workspace-guard";
 import { type NextRequest, NextResponse } from "next/server";
 
+/**
+ * POST /api/billing/cancel — cancel autopay at the end of the paid period via
+ * Elixpo Pay. The workspace keeps its plan until then; Elixpo Pay's expiry
+ * grant moves it back to Starter.
+ */
 export async function POST(request: NextRequest) {
     const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -24,27 +28,30 @@ export async function POST(request: NextRequest) {
             { status: 400 },
         );
     }
+    if (sub.cancelAtPeriodEnd) {
+        return NextResponse.json({ ok: true, message: "Cancellation is already scheduled." });
+    }
 
     try {
-        if (sub.paymentProvider === "stripe" && sub.subscriptionId) {
-            await cancelStripeSubscription(sub.subscriptionId);
-        } else if (sub.paymentProvider === "razorpay" && sub.subscriptionId) {
-            await cancelRazorpaySubscription(sub.subscriptionId);
-        }
-
+        const res = await cancelPaySubscription(session.tenantId);
         await updateTenantSubscription(db, session.tenantId, {
             cancelAtPeriodEnd: true,
+            ...(res.current_period_end ? { currentPeriodEnd: res.current_period_end } : {}),
         });
-
         return NextResponse.json({
             ok: true,
             message:
-                "Your subscription has been scheduled for cancellation at the end of the billing period.",
+                "Your subscription will end at the close of the current billing period. You keep your plan until then.",
         });
-    } catch (e: any) {
+    } catch (e) {
+        const err = e instanceof ElixpoPayError ? e : null;
+        console.error("[billing/cancel]", e);
         return NextResponse.json(
-            { error: "cancel_failed", message: e?.message || "Failed to cancel subscription" },
-            { status: 500 },
+            {
+                error: err?.code || "cancel_failed",
+                message: err?.message || "Failed to cancel subscription",
+            },
+            { status: err?.status || 500 },
         );
     }
 }
