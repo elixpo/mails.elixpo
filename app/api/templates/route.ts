@@ -1,6 +1,7 @@
 export const runtime = "edge";
 
 import { parseAttachmentInputs, replaceAttachments } from "@/lib/attachments";
+import { assertCanCreateTemplate } from "@/lib/billing";
 import { cleanupOrphanImages } from "@/lib/cloudinary";
 import { getDatabase } from "@/lib/d1-client";
 import { getProduct, slugify } from "@/lib/products";
@@ -85,6 +86,14 @@ export async function POST(request: NextRequest) {
         typeof body?.slug === "string" && body.slug.trim() ? slugify(body.slug) : slugify(name);
 
     const db = await getDatabase();
+    const canCreate = await assertCanCreateTemplate(db, session.tenantId);
+    if (!canCreate.allowed) {
+        return NextResponse.json(
+            { error: "plan_limit_reached", message: canCreate.reason },
+            { status: 403 },
+        );
+    }
+
     // Templates are created as one-time (no product) by default — the user
     // attaches a product later from the Settings page to make it webhook-based.
     // If a productId is supplied up front, validate and use it.
