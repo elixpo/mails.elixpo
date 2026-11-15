@@ -48,6 +48,7 @@
         "pages:build": "npx @cloudflare/next-on-pages",
         "start": "next start",
         "lint": "biome check .",
+        "typecheck": "tsc --noEmit",
         "format": "biome check --write .",
         "db:create": "wrangler d1 create elixpo_mail",
         "db:migrate": "wrangler d1 migrations apply elixpo_mail --remote",
