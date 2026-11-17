@@ -34,7 +34,12 @@ export function sanitizeEmailHtml(input: string): string {
     html = html.replace(/<link\b[^>]*rel\s*=\s*["']?import[^>]*>/gi, "");
     html = html.replace(/<\/?form\b[^>]*>/gi, "");
     // Event handlers: on…= with quoted or bare values.
-    html = html.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+    // Apply repeatedly to avoid incomplete multi-character sanitization bypasses.
+    let previousHtml: string;
+    do {
+        previousHtml = html;
+        html = html.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+    } while (html !== previousHtml);
     // Dangerous URL schemes in any URL-bearing attribute (allow for entity/space obfuscation).
     html = html.replace(
         /\s(href|src|action|formaction|background|poster|xlink:href)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/gi,
