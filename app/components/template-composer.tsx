@@ -137,6 +137,10 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     const [contentMode, setContentMode] = useState<"editor" | "html">("editor");
     const [rawHtml, setRawHtml] = useState("");
     const [confirmVisual, setConfirmVisual] = useState(false);
+    // The HTML as saved, plus the editor document it was loaded with. A template
+    // can hold hand-styled HTML that the editor document only approximates.
+    const savedHtmlRef = useRef("");
+    const loadedBlocksSigRef = useRef<string | null>(null);
 
     const syncPreviewScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
         const source = event.currentTarget;
@@ -173,6 +177,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                     );
                     setFooter(t.footer ?? null);
                     setInitialContent(Array.isArray(t.content) ? t.content : undefined);
+                    savedHtmlRef.current = t.content_html || "";
                     if (t.content_mode === "html") {
                         setContentMode("html");
                         setRawHtml(t.content_html || "");
@@ -249,6 +254,7 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
     useEffect(() => {
         if (editorReady && baselineSigRef.current === null) {
             baselineSigRef.current = currentSig;
+            loadedBlocksSigRef.current = JSON.stringify(blocks);
         }
     }, [editorReady, currentSig]);
     const dirty = baselineSigRef.current !== null && currentSig !== baselineSigRef.current;
@@ -274,13 +280,23 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
         return () => clearTimeout(id);
     }, [blocks, bgColor, showPreview, footer, editorReady, contentMode, rawHtml]);
 
-    // Visual → HTML: start from exactly what the editor would send.
+    // Visual → HTML. If the visual content is untouched since loading, start
+    // from the SAVED HTML — it may be hand-styled HTML that the editor document
+    // only approximates (re-rendering would silently drop the styling).
+    // Otherwise start from what the editor would send now.
     async function switchToHtml() {
-        try {
-            const html = apiRef.current ? await apiRef.current.getHTML() : "";
-            setRawHtml(html || rawHtml);
-        } catch {
-            /* keep whatever HTML we had */
+        const untouched =
+            loadedBlocksSigRef.current !== null &&
+            JSON.stringify(blocks) === loadedBlocksSigRef.current;
+        if (untouched && savedHtmlRef.current) {
+            setRawHtml(savedHtmlRef.current);
+        } else {
+            try {
+                const html = apiRef.current ? await apiRef.current.getHTML() : "";
+                setRawHtml(html || rawHtml);
+            } catch {
+                /* keep whatever HTML we had */
+            }
         }
         setContentMode("html");
     }
