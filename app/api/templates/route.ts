@@ -4,6 +4,7 @@ import { parseAttachmentInputs, replaceAttachments } from "@/lib/attachments";
 import { assertCanCreateTemplate } from "@/lib/billing";
 import { cleanupOrphanImages } from "@/lib/cloudinary";
 import { getDatabase } from "@/lib/d1-client";
+import { MAX_RAW_HTML_BYTES, sanitizeEmailHtml } from "@/lib/html-sanitize";
 import { getProduct, slugify } from "@/lib/products";
 import { getSession } from "@/lib/session";
 import { type TemplateRow, createTemplate, toSummary } from "@/lib/templates";
@@ -109,14 +110,31 @@ export async function POST(request: NextRequest) {
         productId = product.id;
     }
 
+    // Raw-HTML mode: the submitted HTML is authoritative — sanitise and cap it.
+    const contentMode = body?.contentMode === "html" ? "html" : "editor";
+    let contentHtml = typeof body?.contentHtml === "string" ? body.contentHtml : "";
+    if (contentMode === "html") {
+        if (new TextEncoder().encode(contentHtml).length > MAX_RAW_HTML_BYTES) {
+            return NextResponse.json(
+                { error: "html_too_large", message: "Template HTML must be under 512 KB." },
+                { status: 400 },
+            );
+        }
+        contentHtml = sanitizeEmailHtml(contentHtml);
+    }
+
     try {
         const row = await createTemplate(db, session.tenantId, productId, {
             name,
             slug,
             subject: typeof body?.subject === "string" ? body.subject : "",
             kind: typeof body?.kind === "string" ? body.kind : "custom",
-            contentJson: Array.isArray(body?.contentJson) ? body.contentJson : null,
-            contentHtml: typeof body?.contentHtml === "string" ? body.contentHtml : "",
+            contentJson:
+                contentMode === "editor" && Array.isArray(body?.contentJson)
+                    ? body.contentJson
+                    : null,
+            contentHtml,
+            contentMode,
             senderId: typeof body?.senderId === "string" ? body.senderId : null,
             bgColor: typeof body?.bgColor === "string" ? body.bgColor : null,
             transactional: body?.transactional === true,
