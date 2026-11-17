@@ -704,7 +704,16 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                         block handles (+ / drag), which sit in a left gutter, in view. */}
                     {contentMode === "html" && (
                         <Box
-                            sx={{ flex: 1, minHeight: 0, display: "flex", p: { xs: 1.2, md: 1.6 } }}
+                            sx={{
+                                // Takes the space left above the toolbar/attachments
+                                // strip; the textarea scrolls inside it instead of
+                                // overflowing underneath the strip.
+                                flex: 1,
+                                minHeight: { xs: 360, lg: 0 },
+                                display: "flex",
+                                overflow: "hidden",
+                                p: { xs: 1.2, md: 1.6 },
+                            }}
                         >
                             <Box
                                 component="textarea"
@@ -734,7 +743,11 @@ export default function TemplateComposer({ templateId }: { templateId?: string }
                                 sx={{
                                     flex: 1,
                                     width: "100%",
-                                    minHeight: 420,
+                                    height: "100%",
+                                    minHeight: 0,
+                                    overflow: "auto",
+                                    display: "block",
+                                    boxSizing: "border-box",
                                     resize: "none",
                                     p: 1.6,
                                     border: "1px solid var(--field-border)",
